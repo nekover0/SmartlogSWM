@@ -1,0 +1,397 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:smartlog_swm_mobile/app/router/app_redirect_guard.dart';
+import 'package:smartlog_swm_mobile/app/router/app_route_names.dart';
+import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/app/router/app_shell_route.dart';
+import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
+import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final refreshNotifier = _GoRouterRefreshNotifier();
+  ref.onDispose(refreshNotifier.dispose);
+  ref.listen<AsyncValue<AuthSession?>>(authControllerProvider, (
+    AsyncValue<AuthSession?>? previous,
+    AsyncValue<AuthSession?> next,
+  ) {
+    refreshNotifier.markNeedsRefresh();
+  });
+
+  return GoRouter(
+    initialLocation: AppRoutePaths.login,
+    refreshListenable: refreshNotifier,
+    redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authControllerProvider);
+      final lastOperation = ref
+          .read(authControllerProvider.notifier)
+          .lastOperation;
+      return appRedirectGuard(
+        state: state,
+        authState: authState,
+        lastOperation: lastOperation,
+      );
+    },
+    routes: <RouteBase>[
+      GoRoute(
+        path: AppRoutePaths.login,
+        name: AppRouteNames.login,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppAuthGatePage();
+        },
+      ),
+      buildAppShellRoute(),
+      GoRoute(
+        path: AppRoutePaths.notifications,
+        name: AppRouteNames.notifications,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.notifications_none_rounded,
+            frameLabel: 'Shell chrome action',
+            routePath: AppRoutePaths.notifications,
+            title: 'Thông báo',
+            description:
+                'Trung tâm thông báo sẽ được gắn vào wireframe shell theo phase tiếp theo.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.account,
+        name: AppRouteNames.account,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.person_outline_rounded,
+            frameLabel: '07. Refined Account & RBAC Screen',
+            routePath: AppRoutePaths.account,
+            title: 'Tài khoản',
+            description:
+                'Trang tài khoản và RBAC giữ chỗ cho luồng đổi vai trò, site và quyền người dùng.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.inventoryDetail,
+        name: AppRouteNames.inventoryDetail,
+        builder: (BuildContext context, GoRouterState state) {
+          final inventoryId =
+              state.pathParameters[AppRoutePaths.inventoryIdParam] ?? 'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.inventory_2_outlined,
+            frameLabel: '05. Inventory Details Screen',
+            routePath: AppRoutePaths.inventoryDetailPath(inventoryId),
+            title: 'Chi tiết tồn kho',
+            description:
+                'Chi tiết hàng hóa, trạng thái và hành động liên quan sẽ được thay bằng màn Figma tương ứng.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.inventoryControl,
+        name: AppRouteNames.inventoryControl,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.swap_horiz_rounded,
+            frameLabel: '13. Kiểm kê & Chuyển vị trí',
+            routePath: AppRoutePaths.inventoryControl,
+            title: 'Kiểm kê & chuyển vị trí',
+            description:
+                'Màn điều phối kiểm kê / chuyển vị trí giữ chỗ cho phase vận hành kho.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.inventoryControlFlow,
+        name: AppRouteNames.inventoryControlFlow,
+        builder: (BuildContext context, GoRouterState state) {
+          final mode =
+              state.pathParameters[AppRoutePaths.inventoryControlModeParam] ??
+              'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.tune_rounded,
+            frameLabel: '13. Kiểm kê & Chuyển vị trí',
+            routePath: AppRoutePaths.inventoryControlFlowPath(mode),
+            title: 'Luồng kiểm kê',
+            description:
+                'Biến thể luồng kiểm kê/chuyển vị trí theo mode sẽ được gắn sau khi hoàn thiện business rules.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.receiptList,
+        name: AppRouteNames.receiptList,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.call_received_rounded,
+            frameLabel: '08. Danh sách Phiếu Nhập (v3)',
+            routePath: AppRoutePaths.receiptList,
+            title: 'Phiếu nhập',
+            description:
+                'Danh sách phiếu nhập khớp với frame vận hành inbound của Figma.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.receiptCreate,
+        name: AppRouteNames.receiptCreate,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.add_box_outlined,
+            frameLabel: '09. Chi tiết Phiếu Nhập (Refined Flow)',
+            routePath: AppRoutePaths.receiptCreate,
+            title: 'Tạo phiếu nhập',
+            description:
+                'Màn tạo phiếu nhập đang là placeholder cho flow chi tiết inbound.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.receiptDetail,
+        name: AppRouteNames.receiptDetail,
+        builder: (BuildContext context, GoRouterState state) {
+          final receiptId =
+              state.pathParameters[AppRoutePaths.receiptIdParam] ?? 'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.receipt_long_rounded,
+            frameLabel: '09. Chi tiết Phiếu Nhập (Refined Flow)',
+            routePath: AppRoutePaths.receiptDetailPath(receiptId),
+            title: 'Chi tiết phiếu nhập',
+            description:
+                'Chi tiết phiếu nhập giữ chỗ cho bản dựng màn inbound v3.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.shipmentList,
+        name: AppRouteNames.shipmentList,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.call_made_rounded,
+            frameLabel: '10. Danh sách Phiếu Xuất Kho (v3)',
+            routePath: AppRoutePaths.shipmentList,
+            title: 'Phiếu xuất',
+            description:
+                'Danh sách phiếu xuất map sang khung outbound của Figma.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.shipmentCreate,
+        name: AppRouteNames.shipmentCreate,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.playlist_add_rounded,
+            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
+            routePath: AppRoutePaths.shipmentCreate,
+            title: 'Tạo phiếu xuất',
+            description:
+                'Flow tạo phiếu xuất sẽ được thay bằng chi tiết outbound thật ở phase sau.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.shipmentDetail,
+        name: AppRouteNames.shipmentDetail,
+        builder: (BuildContext context, GoRouterState state) {
+          final shipmentId =
+              state.pathParameters[AppRoutePaths.shipmentIdParam] ?? 'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.local_shipping_outlined,
+            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
+            routePath: AppRoutePaths.shipmentDetailPath(shipmentId),
+            title: 'Chi tiết phiếu xuất',
+            description:
+                'Chi tiết phiếu xuất giữ chỗ cho màn outbound refine flow.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.scanBarcode,
+        name: AppRouteNames.scanBarcode,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.qr_code_scanner_rounded,
+            frameLabel: '03. Refined Quick Scan Screen',
+            routePath: AppRoutePaths.scanBarcode,
+            title: 'Scan barcode',
+            description:
+                'Màn quét nhanh bám theo wireframe quick scan của Figma.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.scanManual,
+        name: AppRouteNames.scanManual,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.keyboard_alt_outlined,
+            frameLabel: '03. Refined Quick Scan Screen',
+            routePath: AppRoutePaths.scanManual,
+            title: 'Nhập mã thủ công',
+            description:
+                'Biến thể nhập tay trong nhóm scan được giữ chỗ cho phase sau.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.ocrInbox,
+        name: AppRouteNames.ocrInbox,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.document_scanner_outlined,
+            frameLabel: '12. OCR Chụp và Xử lý',
+            routePath: AppRoutePaths.ocrInbox,
+            title: 'OCR',
+            description:
+                'Hàng đợi OCR gắn với màn chụp và xử lý chứng từ trong Figma.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.ocrCapture,
+        name: AppRouteNames.ocrCapture,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.camera_alt_outlined,
+            frameLabel: '12. OCR Chụp và Xử lý',
+            routePath: AppRoutePaths.ocrCapture,
+            title: 'Chụp OCR',
+            description:
+                'Màn chụp OCR sẽ được hiện thực sau khi chốt camera flow.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.ocrReview,
+        name: AppRouteNames.ocrReview,
+        builder: (BuildContext context, GoRouterState state) {
+          final ocrId =
+              state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.fact_check_outlined,
+            frameLabel: '12. OCR Chụp và Xử lý',
+            routePath: AppRoutePaths.ocrReviewPath(ocrId),
+            title: 'Review OCR',
+            description:
+                'Bước review OCR được giữ chỗ cho luồng xác nhận dữ liệu.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.ocrLink,
+        name: AppRouteNames.ocrLink,
+        builder: (BuildContext context, GoRouterState state) {
+          final ocrId =
+              state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
+          return AppRoutePlaceholderPage(
+            icon: Icons.link_rounded,
+            frameLabel: '12. OCR Chụp và Xử lý',
+            routePath: AppRoutePaths.ocrLinkPath(ocrId),
+            title: 'Link OCR',
+            description:
+                'Bước liên kết OCR với chứng từ sẽ được hoàn thiện ở phase sau.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.reports,
+        name: AppRouteNames.reports,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.bar_chart_rounded,
+            frameLabel: '06. Real-time Reports Screen',
+            routePath: AppRoutePaths.reports,
+            title: 'Báo cáo',
+            description:
+                'Màn báo cáo real-time được giữ chỗ theo design hệ thống.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.permissions,
+        name: AppRouteNames.rbacProfile,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.admin_panel_settings_outlined,
+            frameLabel: '07. Refined Account & RBAC Screen',
+            routePath: AppRoutePaths.permissions,
+            title: 'Phân quyền',
+            description:
+                'Profile quyền và audit access sẽ được triển khai ở phase RBAC.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.userAdmin,
+        name: AppRouteNames.userAdmin,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.people_alt_outlined,
+            frameLabel: '07. Refined Account & RBAC Screen',
+            routePath: AppRoutePaths.userAdmin,
+            title: 'Quản lý người dùng',
+            description:
+                'Trang admin users giữ chỗ cho luồng quản trị trong shell more.',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.roleAdmin,
+        name: AppRouteNames.roleAdmin,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AppRoutePlaceholderPage(
+            icon: Icons.rule_folder_outlined,
+            frameLabel: '07. Refined Account & RBAC Screen',
+            routePath: AppRoutePaths.roleAdmin,
+            title: 'Quản lý vai trò',
+            description:
+                'Trang admin roles giữ chỗ cho cấu hình role matrix theo thiết kế.',
+          );
+        },
+      ),
+    ],
+  );
+});
+
+class AppAuthGatePage extends ConsumerWidget {
+  const AppAuthGatePage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    final authController = ref.read(authControllerProvider.notifier);
+    final session = authState.valueOrNull;
+    final isRestoreLoading =
+        authState.isLoading &&
+        authController.lastOperation == AuthOperation.restore &&
+        session == null;
+    final isRestoreError =
+        authState.hasError &&
+        authController.lastOperation == AuthOperation.restore &&
+        session == null;
+
+    return Scaffold(
+      body: isRestoreLoading
+          ? const AppLoadingView(message: 'Đang khôi phục phiên đăng nhập...')
+          : isRestoreError
+          ? AppErrorState(
+              title: 'Không thể khôi phục phiên đăng nhập',
+              message: '${authState.error}',
+              onRetry: () {
+                ref.read(authControllerProvider.notifier).restoreSession();
+              },
+            )
+          : session == null
+          ? const LoginPage()
+          : const AppLoadingView(message: 'Đang mở không gian làm việc...'),
+    );
+  }
+}
+
+class _GoRouterRefreshNotifier extends ChangeNotifier {
+  void markNeedsRefresh() {
+    notifyListeners();
+  }
+}

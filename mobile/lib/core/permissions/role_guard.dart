@@ -9,11 +9,20 @@ abstract final class RoleGuard {
     AppRoutePaths.more,
   ];
 
+  static const Set<String> _specialKnownLocations = <String>{
+    AppRoutePaths.login,
+    AppRoutePaths.more,
+    AppRoutePaths.notifications,
+  };
+
   static ModuleAccess accessForRoleName({
     required String roleName,
     required AppModule module,
   }) {
-    return RoleMatrix.accessFor(role: AppRole.fromName(roleName), module: module);
+    return RoleMatrix.accessFor(
+      role: AppRole.fromName(roleName),
+      module: module,
+    );
   }
 
   static bool canAccessModule({
@@ -83,6 +92,10 @@ abstract final class RoleGuard {
     required AppRole role,
     required String location,
   }) {
+    if (!isKnownLocation(location)) {
+      return false;
+    }
+
     final module = moduleForLocation(location);
     if (module == null) {
       return true;
@@ -102,9 +115,7 @@ abstract final class RoleGuard {
   static AppModule? moduleForLocation(String location) {
     final normalizedLocation = _normalizeLocation(location);
 
-    if (normalizedLocation == AppRoutePaths.login ||
-        normalizedLocation == AppRoutePaths.more ||
-        normalizedLocation == AppRoutePaths.notifications) {
+    if (_specialKnownLocations.contains(normalizedLocation)) {
       return null;
     }
 
@@ -151,6 +162,15 @@ abstract final class RoleGuard {
     }
 
     return null;
+  }
+
+  static bool isKnownLocation(String location) {
+    final normalizedLocation = _normalizeLocation(location);
+    if (_specialKnownLocations.contains(normalizedLocation)) {
+      return true;
+    }
+
+    return moduleForLocation(normalizedLocation) != null;
   }
 
   static String _normalizeLocation(String location) {
