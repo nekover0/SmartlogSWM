@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/theme/app_theme.dart';
 
 class SmartlogApp extends StatelessWidget {
   const SmartlogApp({super.key});
@@ -8,10 +10,7 @@ class SmartlogApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smartlog WMS',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF103B73)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
       home: const _SmartlogBootPlaceholderPage(),
     );
   }
@@ -22,9 +21,27 @@ class _SmartlogBootPlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text('Smartlog mobile bootstrap'),
+        child: Padding(
+          padding: AppSpacing.pagePadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Smartlog mobile bootstrap',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Shared theme and reusable state widgets are ready for the next slices.',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
