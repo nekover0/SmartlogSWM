@@ -1,0 +1,40 @@
+{
+  "accounts": [
+    {
+      "id": "user-admin-001",
+      "username": "admin",
+      "password": "smartlog123",
+      "displayName": "System Administrator",
+      "role": "Administrator",
+      "siteId": "sgn-dc-01",
+      "siteName": "Sai Gon Distribution Center"
+    },
+    {
+      "id": "user-ops-001",
+      "username": "ops.supervisor",
+      "password": "smartlog123",
+      "displayName": "Operations Supervisor",
+      "role": "Operations Supervisor",
+      "siteId": "sgn-dc-01",
+      "siteName": "Sai Gon Distribution Center"
+    },
+    {
+      "id": "user-keeper-001",
+      "username": "warehouse.keeper",
+      "password": "smartlog123",
+      "displayName": "Warehouse Keeper",
+      "role": "Warehouse Keeper",
+      "siteId": "bdg-wh-02",
+      "siteName": "Binh Duong Overflow Warehouse"
+    },
+    {
+      "id": "user-weigh-001",
+      "username": "weighbridge.operator",
+      "password": "smartlog123",
+      "displayName": "Weighbridge Operator",
+      "role": "Weighbridge Operator",
+      "siteId": "cth-yard-01",
+      "siteName": "Can Tho Yard"
+    }
+  ]
+}
