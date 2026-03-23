@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/app/app.dart';
 
 void main() {
   testWidgets('Smartlog app boots from the root widget', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: SmartlogApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: SmartlogApp()));
+    await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Smartlog mobile bootstrap'), findsOneWidget);
+    expect(find.text('Smartlog auth bootstrap ready'), findsOneWidget);
   });
 }
