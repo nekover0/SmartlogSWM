@@ -8,9 +8,9 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const ProviderScope(child: SmartlogApp()));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Smartlog auth bootstrap ready'), findsOneWidget);
+    expect(find.text('Đăng nhập hệ thống'), findsOneWidget);
   });
 }

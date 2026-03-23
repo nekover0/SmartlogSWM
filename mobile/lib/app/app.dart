@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_theme.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
@@ -27,57 +28,31 @@ class _AuthBootstrapPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
+    final authController = ref.read(authControllerProvider.notifier);
+    final session = authState.valueOrNull;
+    final isRestoreLoading =
+        authState.isLoading &&
+        authController.lastOperation == AuthOperation.restore &&
+        session == null;
+    final isRestoreError =
+        authState.hasError &&
+        authController.lastOperation == AuthOperation.restore &&
+        session == null;
 
     return Scaffold(
-      body: authState.when(
-        loading: () =>
-            const AppLoadingView(message: 'Đang khôi phục phiên đăng nhập...'),
-        error: (Object error, StackTrace stackTrace) {
-          return AppErrorState(
-            title: 'Không thể khôi phục phiên đăng nhập',
-            message: '$error',
-            onRetry: () {
-              ref.read(authControllerProvider.notifier).restoreSession();
-            },
-          );
-        },
-        data: (AuthSession? session) {
-          if (session == null) {
-            return const _UnauthenticatedPlaceholderView();
-          }
-
-          return _AuthenticatedPlaceholderView(session: session);
-        },
-      ),
-    );
-  }
-}
-
-class _UnauthenticatedPlaceholderView extends StatelessWidget {
-  const _UnauthenticatedPlaceholderView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: AppSpacing.pagePadding,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Smartlog auth bootstrap ready',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Phiên đăng nhập hiện chưa tồn tại. LoginPage sẽ được nối ở task kế tiếp.',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+      body: isRestoreLoading
+          ? const AppLoadingView(message: 'Đang khôi phục phiên đăng nhập...')
+          : isRestoreError
+          ? AppErrorState(
+              title: 'Không thể khôi phục phiên đăng nhập',
+              message: '${authState.error}',
+              onRetry: () {
+                ref.read(authControllerProvider.notifier).restoreSession();
+              },
+            )
+          : session == null
+          ? const LoginPage()
+          : _AuthenticatedPlaceholderView(session: session),
     );
   }
 }
