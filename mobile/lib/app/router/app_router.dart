@@ -5,9 +5,13 @@ import 'package:smartlog_swm_mobile/app/router/app_redirect_guard.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_names.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/router/app_shell_route.dart';
+import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
+import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
@@ -48,28 +52,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.notifications,
         name: AppRouteNames.notifications,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.notifications_none_rounded,
-            frameLabel: 'Shell chrome action',
-            routePath: AppRoutePaths.notifications,
-            title: 'Thông báo',
-            description:
-                'Trung tâm thông báo sẽ được gắn vào wireframe shell theo phase tiếp theo.',
-          );
+          return const NotificationsPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.account,
         name: AppRouteNames.account,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.person_outline_rounded,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.account,
-            title: 'Tài khoản',
-            description:
-                'Trang tài khoản và RBAC giữ chỗ cho luồng đổi vai trò, site và quyền người dùng.',
-          );
+          return const AccountPage();
         },
       ),
       GoRoute(
@@ -386,6 +376,159 @@ class AppAuthGatePage extends ConsumerWidget {
           : session == null
           ? const LoginPage()
           : const AppLoadingView(message: 'Đang mở không gian làm việc...'),
+    );
+  }
+}
+
+class AppRoutePlaceholderPage extends StatelessWidget {
+  const AppRoutePlaceholderPage({
+    super.key,
+    required this.icon,
+    required this.frameLabel,
+    required this.routePath,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String frameLabel;
+  final String routePath;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              Color(0xFFE9F0FB),
+              AppColors.background,
+              Color(0xFFF8FAFD),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: AppSpacing.pagePadding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: _PlaceholderPanel(
+                  icon: icon,
+                  frameLabel: frameLabel,
+                  routePath: routePath,
+                  title: title,
+                  description: description,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaceholderPanel extends StatelessWidget {
+  const _PlaceholderPanel({
+    required this.icon,
+    required this.frameLabel,
+    required this.routePath,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String frameLabel;
+  final String routePath;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: AppSpacing.cardPadding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(icon, color: AppColors.brand, size: 28),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        frameLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(description, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                _MiniChip(label: 'Route: $routePath'),
+                _MiniChip(label: 'Figma: $frameLabel'),
+                const _MiniChip(label: 'Route placeholder'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniChip extends StatelessWidget {
+  const _MiniChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      label: Text(label),
+      side: const BorderSide(color: AppColors.border),
+      backgroundColor: AppColors.surface,
+      labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
