@@ -468,7 +468,9 @@ Most files in these folders are standard Flutter platform boilerplate unless a t
 - `mobile/assets/fixtures/scan/`
   Purpose: reserved fixture folder for scan data.
 - `mobile/asset/fixtures/auth.sample_account.json`
-  Purpose: legacy compatibility fixture path kept from earlier setup.
+  Purpose: legacy flat compatibility fixture path kept from earlier setup.
+- `mobile/asset/fixtures/auth/sample_accounts.json`
+  Purpose: legacy nested compatibility fixture path for older auth asset callers.
 
 ### `mobile/test/`
 

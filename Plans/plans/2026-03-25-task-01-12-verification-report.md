@@ -204,6 +204,9 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 - Có `AuthRepositoryImpl`
 - Có `SecureStorageService`
 - Có fixture `mobile/assets/fixtures/auth/sample_accounts.json`
+- Có legacy alias fixtures cho tương thích ngược:
+  - `mobile/asset/fixtures/auth.sample_account.json`
+  - `mobile/asset/fixtures/auth/sample_accounts.json`
 - Có repository tests cho login, restore, logout
 
 ## Task 08
