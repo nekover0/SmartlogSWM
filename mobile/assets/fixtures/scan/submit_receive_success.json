@@ -1,0 +1,12 @@
+{
+  "mode": "receive",
+  "success": true,
+  "session_id": "scan-receive-submit-success",
+  "reference_id": "rcp-20260323-001",
+  "warehouse_id": "warehouse-001",
+  "item_code": "SKU-MILK-18L",
+  "location_code": "RCV-STAGE-01",
+  "quantity": 12.0,
+  "submitted_at": "2026-03-25T01:05:00.000Z",
+  "message": "Nhập kho thành công."
+}

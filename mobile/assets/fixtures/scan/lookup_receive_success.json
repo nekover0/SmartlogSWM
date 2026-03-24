@@ -1,0 +1,21 @@
+{
+  "id": "scan-receive-lookup-success",
+  "mode": "receive",
+  "state": "lookup_success",
+  "camera_granted": true,
+  "lookup_code": "RCV-240325-001",
+  "resolved_item_code": "SKU-MILK-18L",
+  "resolved_location_code": "RCV-STAGE-01",
+  "reference_id": null,
+  "warehouse_id": null,
+  "quantity": 12.0,
+  "counted_quantity": null,
+  "source_location_code": null,
+  "destination_location_code": null,
+  "reason_code": null,
+  "error_message": null,
+  "sync_state": "pending",
+  "started_at": "2026-03-25T01:00:00.000Z",
+  "updated_at": "2026-03-25T01:00:05.000Z",
+  "submitted_at": null
+}

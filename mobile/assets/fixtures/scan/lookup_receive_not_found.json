@@ -1,0 +1,21 @@
+{
+  "id": "scan-receive-lookup-not-found",
+  "mode": "receive",
+  "state": "lookup_not_found",
+  "camera_granted": true,
+  "lookup_code": "NOT-FOUND",
+  "resolved_item_code": null,
+  "resolved_location_code": null,
+  "reference_id": null,
+  "warehouse_id": null,
+  "quantity": null,
+  "counted_quantity": null,
+  "source_location_code": null,
+  "destination_location_code": null,
+  "reason_code": null,
+  "error_message": "Không tìm thấy mã vừa quét trong fixture receive.",
+  "sync_state": "failed",
+  "started_at": "2026-03-25T01:00:00.000Z",
+  "updated_at": "2026-03-25T01:00:06.000Z",
+  "submitted_at": null
+}
