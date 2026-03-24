@@ -60,7 +60,7 @@ void main() {
     await settleUi(tester);
 
     expect(find.byKey(const Key('barcode_scan_permission_denied')), findsOneWidget);
-    expect(find.text('Cap quyen lai'), findsOneWidget);
+    expect(find.text('Cấp quyền lại'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();

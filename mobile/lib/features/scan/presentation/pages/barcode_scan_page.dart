@@ -12,6 +12,7 @@ import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/scanner_o
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_forbidden_state.dart';
 
 class BarcodeScanPage extends ConsumerStatefulWidget {
   const BarcodeScanPage({
@@ -428,16 +429,15 @@ class _PreviewPanel extends StatelessWidget {
                     ),
                   )
                 else if (isDenied)
-                  Center(
-                    child: _PermissionState(
-                      key: const Key('barcode_scan_permission_denied'),
-                      icon: Icons.no_photography_rounded,
-                      title: 'Can quyen camera',
+                  KeyedSubtree(
+                    key: const Key('barcode_scan_permission_denied'),
+                    child: AppForbiddenState(
+                      title: 'Cần quyền camera',
                       message:
                           session.errorMessage ??
-                          'Hay cap quyen camera de tiep tuc barcode receive.',
-                      actionLabel: 'Cap quyen lai',
-                      onAction: onRequestPermission,
+                          'Hãy cấp quyền camera để tiếp tục barcode receive.',
+                      retryLabel: 'Cấp quyền lại',
+                      onRetry: onRequestPermission,
                     ),
                   )
                 else
@@ -563,16 +563,12 @@ class _PermissionState extends StatelessWidget {
     required this.title,
     required this.message,
     this.loading = false,
-    this.actionLabel,
-    this.onAction,
   });
 
   final IconData icon;
   final String title;
   final String message;
   final bool loading;
-  final String? actionLabel;
-  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -613,18 +609,6 @@ class _PermissionState extends StatelessWidget {
               color: AppColors.surface.withValues(alpha: 0.74),
             ),
           ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            ElevatedButton.icon(
-              onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.surface,
-                foregroundColor: AppColors.brand,
-              ),
-              icon: const Icon(Icons.camera_alt_rounded),
-              label: Text(actionLabel!),
-            ),
-          ],
         ],
       ),
     );

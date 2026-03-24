@@ -20,6 +20,7 @@ import 'package:smartlog_swm_mobile/features/tasks/application/controllers/task_
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_empty_state.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
@@ -53,6 +54,21 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
     }
 
     if (receiptState.hasError && receipt == null) {
+      if (_isMissingReceiptError(receiptState.error)) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Chi tiết phiếu nhập')),
+          body: AppEmptyState(
+            title: 'Không tìm thấy phiếu nhập',
+            message:
+                'Phiếu nhập này không còn tồn tại hoặc bạn cần tải lại queue inbound.',
+            retryLabel: 'Quay về danh sách',
+            onRetry: () {
+              context.go(AppRoutePaths.receiptList);
+            },
+          ),
+        );
+      }
+
       return Scaffold(
         appBar: AppBar(title: const Text('Chi tiết phiếu nhập')),
         body: AppErrorState(
@@ -530,6 +546,16 @@ String _formatQuantity(double value) {
 }
 
 bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;
+
+bool _isMissingReceiptError(Object? error) {
+  if (error is StateError) {
+    return true;
+  }
+
+  final normalizedError = '$error'.toLowerCase();
+  return normalizedError.contains('not found') ||
+      normalizedError.contains('no element');
+}
 
 String _statusLabel(ReceiptStatus status) {
   return switch (status) {
