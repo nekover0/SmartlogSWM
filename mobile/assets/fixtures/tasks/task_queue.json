@@ -1,0 +1,84 @@
+{
+  "items": [
+    {
+      "id": "task-receipt-critical-001",
+      "type": "receipt",
+      "status": "open",
+      "severity": "critical",
+      "title": "Phiếu nhập RCP-240323-001 chờ cân lần 1",
+      "description": "Xe 51D-12345 đã vào cổng nhưng chưa bắt đầu cân.",
+      "source_module": "inbound",
+      "source_entity_type": "receipt",
+      "source_entity_id": "rcp-20260323-001",
+      "source_entity_no": "RCP-240323-001",
+      "route_name": "receipt_detail",
+      "route_params": {
+        "receiptId": "rcp-20260323-001"
+      },
+      "age_minutes": 95,
+      "due_at": "2026-03-24T08:15:00.000Z",
+      "created_at": "2026-03-24T06:40:00.000Z",
+      "primary_action": {
+        "type": "start_weighing",
+        "label": "Bắt đầu cân",
+        "routeName": "receipt_detail",
+        "routeParams": {
+          "receiptId": "rcp-20260323-001"
+        }
+      },
+      "secondary_actions": [
+        {
+          "type": "acknowledge",
+          "label": "Đã hiểu"
+        }
+      ],
+      "sync_state": "synced"
+    },
+    {
+      "id": "task-receipt-normal-001",
+      "type": "receipt",
+      "status": "open",
+      "severity": "medium",
+      "title": "2 phiếu nhập mới cần xác nhận chứng từ",
+      "description": "Kiểm tra danh sách phiếu nhập đến trong ca sáng.",
+      "source_module": "inbound",
+      "source_entity_type": "receipt_list",
+      "source_entity_no": "Inbound Queue",
+      "route_name": "receipt_list",
+      "age_minutes": 28,
+      "created_at": "2026-03-24T07:47:00.000Z",
+      "primary_action": {
+        "type": "open",
+        "label": "Mở danh sách",
+        "routeName": "receipt_list"
+      },
+      "sync_state": "synced"
+    },
+    {
+      "id": "task-ocr-review-001",
+      "type": "ocr",
+      "status": "acknowledged",
+      "severity": "high",
+      "title": "3 chứng từ OCR cần xem xét",
+      "description": "Có trường confidence thấp cần người dùng xác nhận lại.",
+      "source_module": "ocr",
+      "source_entity_type": "ocr_queue",
+      "source_entity_no": "OCR Inbox",
+      "route_name": "ocr_inbox",
+      "age_minutes": 44,
+      "created_at": "2026-03-24T07:31:00.000Z",
+      "primary_action": {
+        "type": "review_ocr",
+        "label": "Review OCR",
+        "routeName": "ocr_inbox"
+      },
+      "secondary_actions": [
+        {
+          "type": "dismiss",
+          "label": "Bỏ qua"
+        }
+      ],
+      "sync_state": "pending"
+    }
+  ]
+}

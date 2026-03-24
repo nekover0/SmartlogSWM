@@ -17,19 +17,24 @@ class AppBadgeCounts {
         inventory = 0,
         more = 0;
 
-  factory AppBadgeCounts.demo({required bool showTasksTab}) {
+  factory AppBadgeCounts.demo({
+    required bool showTasksTab,
+    int? taskCount,
+  }) {
+    final resolvedTaskCount = showTasksTab ? (taskCount ?? 7) : 0;
+
     if (showTasksTab) {
-      return const AppBadgeCounts(
+      return AppBadgeCounts(
         notifications: 4,
-        tasks: 7,
+        tasks: resolvedTaskCount,
         inventory: 2,
         more: 5,
       );
     }
 
-    return const AppBadgeCounts(
+    return AppBadgeCounts(
       notifications: 2,
-      tasks: 0,
+      tasks: resolvedTaskCount,
       inventory: 3,
       more: 4,
     );

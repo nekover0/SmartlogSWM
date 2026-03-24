@@ -1,4 +1,4 @@
-# Xác minh trạng thái task 01-12
+# Xác minh trạng thái task 01-13
 
 ## Phạm vi đã đọc
 
@@ -17,6 +17,8 @@
   - `10-add-route-constants-and-role-matrix.md`
   - `11-add-redirect-guard-and-router-skeleton.md`
   - `12-build-app-shell-layout-and-placeholders.md`
+- File task tiếp theo đã triển khai:
+  - `13-add-task-fixtures-repository-and-controller.md`
 
 ## Cách xác minh
 
@@ -34,6 +36,7 @@ flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter analyze
 flutter test
+flutter test test/features/tasks/application/task_queue_controller_test.dart
 ```
 
 ### Kết quả lệnh
@@ -42,6 +45,7 @@ flutter test
 - `dart run build_runner build --delete-conflicting-outputs`: PASS
 - `flutter analyze`: PASS
 - `flutter test`: PASS
+- `flutter test test/features/tasks/application/task_queue_controller_test.dart`: PASS
 
 ## Lưu ý quan trọng
 
@@ -51,11 +55,11 @@ Lần chạy verify đầu tiên bị fail vì `.dart_tool/package_config.json` 
 
 ## Kết luận tổng quan
 
-Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 12 đã được hoàn thành** theo checklist gốc.
+Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 13 đã được hoàn thành** theo checklist gốc.
 
 ### Kết luận ngắn
 
-- `01` đến `12`: hoàn thành
+- `01` đến `13`: hoàn thành
 
 ### Ghi chú về task 02
 
@@ -291,7 +295,39 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 - Role-based hiển thị tab/FAB đã có test
 - Shell widget tests pass
 
-## Tất cả những gì đã làm được tới hết task 12
+## Task 13
+
+**Trạng thái:** Hoàn thành
+
+### Đã làm được
+
+- Có `TaskRepository`
+- Có `TaskQueueFixtureDataSource`
+- Có `TaskRepositoryImpl`
+- Có `TaskQueueController`
+- Có fixture `mobile/assets/fixtures/tasks/task_queue.json`
+- Fixture bao gồm tối thiểu:
+  - 1 task receipt mức `critical` deep-link tới `receipt_detail`
+  - 1 task receipt mức thường deep-link tới `receipt_list`
+  - 1 task non-receipt loại `ocr` để phục vụ filtering
+- Controller đã expose:
+  - `pendingItems`
+  - `visibleItems`
+  - `pendingTaskCount`
+  - `criticalTaskCount`
+  - `availableTypes`
+  - severity filter
+  - type filter
+  - sorted list
+- `app_shell_controller.dart` đã lấy badge `tasks` từ `TaskQueueController`
+- Có unit test cho:
+  - loading fixture data
+  - sorting
+  - severity filtering
+  - type filtering
+  - shell badge derivation
+
+## Tất cả những gì đã làm được tới hết task 13
 
 ### Hạ tầng Flutter
 
@@ -338,6 +374,18 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 - Có scan FAB và action sheet
 - Có placeholder pages cho các module chưa triển khai sâu
 
+### Task queue data layer
+
+- Có fixture task queue riêng cho mobile slice
+- Có repository layer cho `tasks`
+- Có controller layer cho `tasks`
+- Đã có logic sort ưu tiên:
+  - severity cao hơn lên trước
+  - status action-oriented lên trước
+  - task tới hạn và task già hơn được ưu tiên
+- Đã có filter state cho severity và type
+- Badge `Công việc` trong shell đã nhận dữ liệu pending count từ controller thay vì demo cứng
+
 ### Chất lượng và xác minh
 
 - `flutter pub get` pass
@@ -347,6 +395,6 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 
 ## Kết luận cuối
 
-Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-12` hiện đã hoàn thành đầy đủ.
+Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-13` hiện đã hoàn thành đầy đủ.
 
-=> Kết luận chính thức: **12/12 task đã hoàn thành.**
+=> Kết luận chính thức: **13/13 task đã hoàn thành.**

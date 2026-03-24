@@ -4,6 +4,7 @@ import 'package:smartlog_swm_mobile/app/shell/domain/models/current_role.dart';
 import 'package:smartlog_swm_mobile/app/shell/domain/models/current_site.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/tasks/application/controllers/task_queue_controller.dart';
 
 final appShellControllerProvider =
     NotifierProvider<AppShellController, AppShellState>(
@@ -14,13 +15,17 @@ class AppShellController extends Notifier<AppShellState> {
   @override
   AppShellState build() {
     final authState = ref.watch(authControllerProvider);
+    final taskQueueState = ref.watch(taskQueueControllerProvider);
     final session = authState.valueOrNull;
 
     if (session == null) {
       return const AppShellState.unauthenticated();
     }
 
-    return AppShellState.fromSession(session);
+    return AppShellState.fromSession(
+      session,
+      taskPendingCount: taskQueueState.valueOrNull?.pendingTaskCount ?? 0,
+    );
   }
 }
 
@@ -47,7 +52,10 @@ class AppShellState {
         currentSite = const CurrentSite(id: '', name: 'Smartlog WMS'),
         badgeCounts = const AppBadgeCounts.zero();
 
-  factory AppShellState.fromSession(AuthSession session) {
+  factory AppShellState.fromSession(
+    AuthSession session, {
+    required int taskPendingCount,
+  }) {
     final displayName = session.currentUser.displayName.trim().isEmpty
         ? session.currentUser.username.trim()
         : session.currentUser.displayName.trim();
@@ -57,7 +65,10 @@ class AppShellState {
       displayName: displayName,
       currentRole: currentRole,
       currentSite: CurrentSite.fromUser(session.currentUser),
-      badgeCounts: AppBadgeCounts.demo(showTasksTab: currentRole.showTasksTab),
+      badgeCounts: AppBadgeCounts.demo(
+        showTasksTab: currentRole.showTasksTab,
+        taskCount: currentRole.showTasksTab ? taskPendingCount : 0,
+      ),
     );
   }
 
