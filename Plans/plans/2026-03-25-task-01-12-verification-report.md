@@ -1,4 +1,4 @@
-# Xác minh trạng thái task 01-14
+# Xác minh trạng thái task 01-15
 
 ## Phạm vi đã đọc
 
@@ -20,6 +20,7 @@
 - File task tiếp theo đã triển khai:
   - `13-add-task-fixtures-repository-and-controller.md`
   - `14-build-task-queue-page-and-shell-badges.md`
+  - `15-add-receipt-fixtures-repository-and-controllers.md`
 
 ## Cách xác minh
 
@@ -39,6 +40,8 @@ flutter analyze
 flutter test
 flutter test test/features/tasks/application/task_queue_controller_test.dart
 flutter test test/features/tasks/presentation/task_queue_page_test.dart
+flutter test test/features/inbound/application/receipt_list_controller_test.dart
+flutter test test/features/inbound/application/receipt_detail_controller_test.dart
 ```
 
 ### Kết quả lệnh
@@ -49,6 +52,8 @@ flutter test test/features/tasks/presentation/task_queue_page_test.dart
 - `flutter test`: PASS
 - `flutter test test/features/tasks/application/task_queue_controller_test.dart`: PASS
 - `flutter test test/features/tasks/presentation/task_queue_page_test.dart`: PASS
+- `flutter test test/features/inbound/application/receipt_list_controller_test.dart`: PASS
+- `flutter test test/features/inbound/application/receipt_detail_controller_test.dart`: PASS
 
 ## Lưu ý quan trọng
 
@@ -58,11 +63,11 @@ Lần chạy verify đầu tiên bị fail vì `.dart_tool/package_config.json` 
 
 ## Kết luận tổng quan
 
-Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 14 đã được hoàn thành** theo checklist gốc.
+Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 15 đã được hoàn thành** theo checklist gốc.
 
 ### Kết luận ngắn
 
-- `01` đến `14`: hoàn thành
+- `01` đến `15`: hoàn thành
 
 ### Ghi chú về task 02
 
@@ -364,7 +369,38 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
   - empty state
   - CTA deep-link sang receipt detail
 
-## Tất cả những gì đã làm được tới hết task 14
+## Task 15
+
+**Trạng thái:** Hoàn thành
+
+### Đã làm được
+
+- Có `ReceiptRepository`
+- Có `ReceiptFixtureDataSource`
+- Có `ReceiptRepositoryImpl`
+- Có `ReceiptListController`
+- Có `ReceiptDetailController`
+- Có `ReceiptActionController`
+- Có fixture:
+  - `mobile/assets/fixtures/inbound/receipt_list.json`
+  - `mobile/assets/fixtures/inbound/receipt_detail_receipt-001.json`
+- `ReceiptListController` đã expose:
+  - status filter
+  - search query
+  - `visibleItems`
+  - `availableStatuses`
+  - `activeCount`
+  - `countForStatus`
+- `ReceiptDetailController(receiptId)` load detail theo route id
+- `ReceiptActionController(receiptId)` derive thứ tự footer actions từ `availableActions`, không hardcode trong widget
+- Có unit test cho:
+  - loading receipt list
+  - status chips / sorting
+  - search filtering
+  - loading receipt detail
+  - footer action derivation
+
+## Tất cả những gì đã làm được tới hết task 15
 
 ### Hạ tầng Flutter
 
@@ -433,6 +469,18 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 - Deep-link từ task card đã dùng route metadata của task
 - Có widget test cho rendering, filtering, empty state và CTA navigation
 
+### Inbound data layer
+
+- Có fixture list/detail riêng cho receipt flow
+- Có repository layer cho `inbound`
+- Có controller list/detail/action cho receipt state
+- Đã có logic filter theo:
+  - trạng thái
+  - search query theo mã phiếu, PO, B/L, biển số xe
+- Đã có detail load theo `receiptId`
+- Footer actions của receipt đã được derive từ contract `availableActions`
+- Có unit test cho inbound controller state và action ordering
+
 ### Chất lượng và xác minh
 
 - `flutter pub get` pass
@@ -442,6 +490,6 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 
 ## Kết luận cuối
 
-Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-14` hiện đã hoàn thành đầy đủ.
+Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-15` hiện đã hoàn thành đầy đủ.
 
-=> Kết luận chính thức: **14/14 task đã hoàn thành.**
+=> Kết luận chính thức: **15/15 task đầu tiên đã hoàn thành.**

@@ -1,0 +1,154 @@
+{
+  "receipts": [
+    {
+      "id": "rcp-20260323-001",
+      "receipt_no": "RCP-240323-001",
+      "status": "waiting_for_weighing",
+      "owner": {
+        "id": "owner-001",
+        "code": "VINAMILK",
+        "name": "Vinamilk Logistics"
+      },
+      "warehouse": {
+        "id": "warehouse-001",
+        "code": "BDG-WH-02",
+        "name": "Binh Duong Overflow Warehouse"
+      },
+      "vehicle": {
+        "plateNumber": "51D-12345",
+        "driverName": "Nguyen Minh Quan"
+      },
+      "purchase_order_no": "PO-240323-001",
+      "bill_of_lading_no": "BL-240323-001",
+      "vessel_name": "MV Mekong Star",
+      "expected_weight_kg": 18250.0,
+      "received_weight_kg": 0.0,
+      "port_weight_kg": 18300.0,
+      "variance_weight_kg": 0.0,
+      "source_ocr_record_id": "ocr-20260323-001",
+      "sync_state": "synced",
+      "available_actions": [
+        {
+          "type": "start_weighing",
+          "label": "Bắt đầu cân"
+        },
+        {
+          "type": "review_ocr",
+          "label": "Liên kết OCR"
+        }
+      ],
+      "note": "Xe đã vào cổng, đang chờ vào trạm cân.",
+      "created_at": "2026-03-24T06:40:00.000Z",
+      "updated_at": "2026-03-24T08:05:00.000Z"
+    },
+    {
+      "id": "rcp-20260323-002",
+      "receipt_no": "RCP-240323-002",
+      "status": "confirmed",
+      "owner": {
+        "id": "owner-002",
+        "code": "MASAN",
+        "name": "Masan Consumer"
+      },
+      "warehouse": {
+        "id": "warehouse-001",
+        "code": "BDG-WH-02",
+        "name": "Binh Duong Overflow Warehouse"
+      },
+      "vehicle": {
+        "plateNumber": "61H-55088",
+        "driverName": "Tran Dinh Bao"
+      },
+      "purchase_order_no": "PO-240323-002",
+      "bill_of_lading_no": "BL-240323-002",
+      "expected_weight_kg": 16000.0,
+      "received_weight_kg": 0.0,
+      "variance_weight_kg": 0.0,
+      "sync_state": "pending",
+      "available_actions": [
+        {
+          "type": "open",
+          "label": "Mở phiếu"
+        },
+        {
+          "type": "review_ocr",
+          "label": "Liên kết OCR"
+        }
+      ],
+      "note": "Chờ xác nhận bộ chứng từ trước khi cân.",
+      "created_at": "2026-03-24T07:15:00.000Z",
+      "updated_at": "2026-03-24T07:55:00.000Z"
+    },
+    {
+      "id": "rcp-20260323-003",
+      "receipt_no": "RCP-240323-003",
+      "status": "weighing_1",
+      "owner": {
+        "id": "owner-003",
+        "code": "NESTLE",
+        "name": "Nestle Vietnam"
+      },
+      "warehouse": {
+        "id": "warehouse-002",
+        "code": "SGN-DC-01",
+        "name": "Sai Gon Distribution Center"
+      },
+      "vehicle": {
+        "plateNumber": "50H-22114",
+        "driverName": "Le Van Tuan"
+      },
+      "purchase_order_no": "PO-240323-003",
+      "bill_of_lading_no": "BL-8899-003",
+      "expected_weight_kg": 12400.0,
+      "received_weight_kg": 12180.0,
+      "variance_weight_kg": -220.0,
+      "sync_state": "synced",
+      "available_actions": [
+        {
+          "type": "start_weighing",
+          "label": "Cập nhật cân"
+        },
+        {
+          "type": "approve",
+          "label": "Xác nhận nhập"
+        }
+      ],
+      "note": "Đã cân lần 1, chờ nhập kết quả cân lần 2.",
+      "created_at": "2026-03-24T05:30:00.000Z",
+      "updated_at": "2026-03-24T07:20:00.000Z"
+    },
+    {
+      "id": "rcp-20260323-004",
+      "receipt_no": "RCP-240323-004",
+      "status": "completed",
+      "owner": {
+        "id": "owner-004",
+        "code": "AJINOMOTO",
+        "name": "Ajinomoto Vietnam"
+      },
+      "warehouse": {
+        "id": "warehouse-002",
+        "code": "SGN-DC-01",
+        "name": "Sai Gon Distribution Center"
+      },
+      "vehicle": {
+        "plateNumber": "51C-90909",
+        "driverName": "Pham Duc Thang"
+      },
+      "purchase_order_no": "PO-240322-014",
+      "bill_of_lading_no": "BL-240322-014",
+      "expected_weight_kg": 9800.0,
+      "received_weight_kg": 9810.0,
+      "variance_weight_kg": 10.0,
+      "sync_state": "synced",
+      "available_actions": [
+        {
+          "type": "open",
+          "label": "Xem phiếu"
+        }
+      ],
+      "created_at": "2026-03-23T14:20:00.000Z",
+      "updated_at": "2026-03-23T16:50:00.000Z"
+    }
+  ]
+}
