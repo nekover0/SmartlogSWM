@@ -345,6 +345,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+String? resolveNamedRouteLocation({
+  required GoRouter router,
+  String? routeName,
+  Map<String, String>? pathParameters,
+  Map<String, String>? queryParameters,
+}) {
+  final normalizedRouteName = routeName?.trim();
+  if (normalizedRouteName == null || normalizedRouteName.isEmpty) {
+    return null;
+  }
+
+  try {
+    return router.namedLocation(
+      normalizedRouteName,
+      pathParameters: pathParameters ?? const <String, String>{},
+      queryParameters: queryParameters ?? const <String, String>{},
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 class AppAuthGatePage extends ConsumerWidget {
   const AppAuthGatePage({super.key});
 

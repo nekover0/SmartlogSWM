@@ -107,6 +107,7 @@ class _AppBottomNavButton extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          key: Key('bottom_nav_button_${item.branchIndex}'),
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Padding(
@@ -115,6 +116,7 @@ class _AppBottomNavButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Badge(
+                  key: Key('bottom_nav_badge_${item.branchIndex}'),
                   isLabelVisible: item.badgeCount > 0,
                   label: Text(_formatBadgeCount(item.badgeCount)),
                   backgroundColor: AppColors.danger,

@@ -16,6 +16,11 @@ void main() {
   late ProviderContainer container;
   late GoRouter router;
 
+  Future<void> settleShell(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
   Widget buildSubject(_FakeAuthRepository repository) {
     container = ProviderContainer(
       overrides: [authRepositoryProvider.overrideWithValue(repository)],
@@ -44,7 +49,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleShell(tester);
 
     expect(find.text('Sai Gon Distribution Center'), findsOneWidget);
     expect(find.byTooltip('Mở scan nhanh'), findsOneWidget);
@@ -52,7 +57,7 @@ void main() {
     expect(find.byIcon(Icons.dashboard_rounded), findsNothing);
 
     await tester.tap(find.byTooltip('Mở scan nhanh'));
-    await tester.pumpAndSettle();
+    await settleShell(tester);
 
     expect(find.text('Quét nhanh'), findsOneWidget);
     expect(find.text('OCR chụp chứng từ'), findsOneWidget);
@@ -71,10 +76,11 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleShell(tester);
 
     router.go(AppRoutePaths.inventory);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.byIcon(Icons.inventory_2_rounded), findsOneWidget);
     expect(find.byIcon(Icons.dashboard_rounded), findsNothing);
@@ -92,7 +98,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settleShell(tester);
 
     expect(find.byTooltip('Mở scan nhanh'), findsNothing);
     expect(find.byIcon(Icons.qr_code_scanner_rounded), findsNothing);

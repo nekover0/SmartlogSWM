@@ -1,4 +1,4 @@
-# Xác minh trạng thái task 01-13
+# Xác minh trạng thái task 01-14
 
 ## Phạm vi đã đọc
 
@@ -19,6 +19,7 @@
   - `12-build-app-shell-layout-and-placeholders.md`
 - File task tiếp theo đã triển khai:
   - `13-add-task-fixtures-repository-and-controller.md`
+  - `14-build-task-queue-page-and-shell-badges.md`
 
 ## Cách xác minh
 
@@ -37,6 +38,7 @@ dart run build_runner build --delete-conflicting-outputs
 flutter analyze
 flutter test
 flutter test test/features/tasks/application/task_queue_controller_test.dart
+flutter test test/features/tasks/presentation/task_queue_page_test.dart
 ```
 
 ### Kết quả lệnh
@@ -46,6 +48,7 @@ flutter test test/features/tasks/application/task_queue_controller_test.dart
 - `flutter analyze`: PASS
 - `flutter test`: PASS
 - `flutter test test/features/tasks/application/task_queue_controller_test.dart`: PASS
+- `flutter test test/features/tasks/presentation/task_queue_page_test.dart`: PASS
 
 ## Lưu ý quan trọng
 
@@ -55,11 +58,11 @@ Lần chạy verify đầu tiên bị fail vì `.dart_tool/package_config.json` 
 
 ## Kết luận tổng quan
 
-Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 13 đã được hoàn thành** theo checklist gốc.
+Hiện tại có thể confirm rằng **toàn bộ task từ 01 đến 14 đã được hoàn thành** theo checklist gốc.
 
 ### Kết luận ngắn
 
-- `01` đến `13`: hoàn thành
+- `01` đến `14`: hoàn thành
 
 ### Ghi chú về task 02
 
@@ -327,7 +330,41 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
   - type filtering
   - shell badge derivation
 
-## Tất cả những gì đã làm được tới hết task 13
+## Task 14
+
+**Trạng thái:** Hoàn thành
+
+### Đã làm được
+
+- Đã thay placeholder `/tasks` bằng task queue page thật
+- Có `task_queue_page.dart`
+- Có `task_card.dart`
+- Có `task_filter_bar.dart`
+- Header hiển thị:
+  - tổng task mở
+  - số task nghiêm trọng
+  - context theo queue type nếu vào từ deep-link shell
+- Có filter chips theo:
+  - severity
+  - task type
+- Có task cards hiển thị:
+  - title
+  - severity
+  - type
+  - age / due time
+  - source
+  - primary CTA
+- Primary CTA dùng `routeName` và `routeParams` để deep-link thay vì hardcode theo từng loại task
+- Có quick action sheet cho primary/secondary actions
+- Badge ở bottom nav có key riêng và phản ánh real task pending count từ controller
+- Có widget test cho:
+  - render task cards
+  - badge visibility
+  - chip filtering
+  - empty state
+  - CTA deep-link sang receipt detail
+
+## Tất cả những gì đã làm được tới hết task 14
 
 ### Hạ tầng Flutter
 
@@ -386,6 +423,16 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 - Đã có filter state cho severity và type
 - Badge `Công việc` trong shell đã nhận dữ liệu pending count từ controller thay vì demo cứng
 
+### Task queue presentation
+
+- `/tasks` đã là queue screen hoạt động thật thay cho placeholder
+- Có header counter cho tổng việc mở và việc nghiêm trọng
+- Có filter chips theo severity và type lấy từ controller state
+- Có task cards theo đúng mobile-first queue flow
+- Có quick action sheet cho thao tác nhanh trên task
+- Deep-link từ task card đã dùng route metadata của task
+- Có widget test cho rendering, filtering, empty state và CTA navigation
+
 ### Chất lượng và xác minh
 
 - `flutter pub get` pass
@@ -395,6 +442,6 @@ Như vậy checklist task 02 hiện đã khớp hoàn toàn:
 
 ## Kết luận cuối
 
-Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-13` hiện đã hoàn thành đầy đủ.
+Nếu xét theo cả verify thực tế và checklist gốc của từng task, thì `Task 01-14` hiện đã hoàn thành đầy đủ.
 
-=> Kết luận chính thức: **13/13 task đã hoàn thành.**
+=> Kết luận chính thức: **14/14 task đã hoàn thành.**
