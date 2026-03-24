@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -195,7 +197,7 @@ class _TaskQueuePageState extends ConsumerState<TaskQueuePage> {
       return;
     }
 
-    context.go(location);
+    unawaited(context.push(location));
   }
 
   void _showQuickActions(BuildContext context, TaskItemEntity item) {
@@ -242,7 +244,7 @@ class _TaskQueuePageState extends ConsumerState<TaskQueuePage> {
                     subtitle: const Text('Mở flow chi tiết'),
                     onTap: () {
                       Navigator.of(sheetContext).pop();
-                      context.go(primaryLocation);
+                      unawaited(context.push(primaryLocation));
                     },
                   ),
                 for (final action in item.secondaryActions)
@@ -278,7 +280,7 @@ class _TaskQueuePageState extends ConsumerState<TaskQueuePage> {
     );
 
     if (location != null) {
-      context.go(location);
+      unawaited(context.push(location));
       return;
     }
 

@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartlog_swm_mobile/features/inbound/data/contracts/receipt_contract.dart';
 import 'package:smartlog_swm_mobile/features/inbound/application/controllers/receipt_detail_controller.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
@@ -14,9 +15,31 @@ class ReceiptActionController
   @override
   ReceiptActionState build(String receiptId) {
     final detailState = ref.watch(receiptDetailControllerProvider(receiptId));
+    final receipt = detailState.valueOrNull;
     return ReceiptActionState(
-      allActions: detailState.valueOrNull?.availableActions,
+      allActions: _resolveActions(receipt),
     );
+  }
+
+  List<ActionCapability> _resolveActions(ReceiptEntity? receipt) {
+    if (receipt == null) {
+      return const <ActionCapability>[];
+    }
+
+    final hasReceiveProgress = receipt.lines.any((line) => line.receivedQty > 0);
+    return receipt.availableActions.map((action) {
+      if (action.type == TaskActionType.startWeighing) {
+        return action.copyWith(
+          label: hasReceiveProgress ? 'Quét thêm barcode' : 'Bắt đầu quét nhận',
+        );
+      }
+
+      if (action.type == TaskActionType.approve && hasReceiveProgress) {
+        return action.copyWith(enabled: true);
+      }
+
+      return action;
+    }).toList(growable: false);
   }
 }
 

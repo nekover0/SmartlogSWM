@@ -41,7 +41,7 @@ void main() {
 
       expect(
         actionState.primaryActions.map((action) => action.label).toList(),
-        <String>['Bắt đầu cân', 'Xác nhận nhập'],
+        <String>['Bắt đầu quét nhận', 'Xác nhận nhập'],
       );
       expect(
         actionState.secondaryActions.map((action) => action.label).toList(),

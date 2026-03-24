@@ -3,19 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:smartlog_swm_mobile/app/router/app_router.dart';
+import 'package:smartlog_swm_mobile/app/router/app_route_names.dart';
+import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
 import 'package:smartlog_swm_mobile/features/inbound/application/controllers/receipt_action_controller.dart';
 import 'package:smartlog_swm_mobile/features/inbound/application/controllers/receipt_detail_controller.dart';
+import 'package:smartlog_swm_mobile/features/inbound/application/controllers/receipt_list_controller.dart';
 import 'package:smartlog_swm_mobile/features/inbound/data/contracts/receipt_contract.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/widgets/receipt_action_footer.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/widgets/receipt_line_tile.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/widgets/receipt_weight_summary.dart';
+import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_flow_projection_controller.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
+import 'package:smartlog_swm_mobile/features/tasks/application/controllers/task_queue_controller.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
-class ReceiptDetailPage extends ConsumerWidget {
+class ReceiptDetailPage extends ConsumerStatefulWidget {
   const ReceiptDetailPage({
     super.key,
     required this.receiptId,
@@ -24,9 +32,18 @@ class ReceiptDetailPage extends ConsumerWidget {
   final String receiptId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final receiptState = ref.watch(receiptDetailControllerProvider(receiptId));
-    final actionState = ref.watch(receiptActionControllerProvider(receiptId));
+  ConsumerState<ReceiptDetailPage> createState() => _ReceiptDetailPageState();
+}
+
+class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
+  @override
+  Widget build(BuildContext context) {
+    final receiptState = ref.watch(
+      receiptDetailControllerProvider(widget.receiptId),
+    );
+    final actionState = ref.watch(
+      receiptActionControllerProvider(widget.receiptId),
+    );
     final receipt = receiptState.valueOrNull;
 
     if (receiptState.isLoading && receipt == null) {
@@ -42,7 +59,11 @@ class ReceiptDetailPage extends ConsumerWidget {
           title: 'Không tải được chi tiết phiếu nhập',
           message: '${receiptState.error}',
           onRetry: () {
-            ref.read(receiptDetailControllerProvider(receiptId).notifier).refresh();
+            ref
+                .read(
+                  receiptDetailControllerProvider(widget.receiptId).notifier,
+                )
+                .refresh();
           },
         ),
       );
@@ -60,7 +81,11 @@ class ReceiptDetailPage extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () {
-              ref.read(receiptDetailControllerProvider(receiptId).notifier).refresh();
+              ref
+                  .read(
+                    receiptDetailControllerProvider(widget.receiptId).notifier,
+                  )
+                  .refresh();
             },
             tooltip: 'Tải lại',
             icon: const Icon(Icons.refresh_rounded),
@@ -70,10 +95,18 @@ class ReceiptDetailPage extends ConsumerWidget {
       bottomNavigationBar: ReceiptActionFooter(
         primaryActions: actionState.primaryActions,
         secondaryActions: actionState.secondaryActions,
-        onActionSelected: (action) => _handleAction(context, receipt, action),
+        onActionSelected: (action) {
+          _handleAction(receipt, action);
+        },
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(receiptDetailControllerProvider(receiptId).notifier).refresh(),
+        onRefresh: () {
+          return ref
+              .read(
+                receiptDetailControllerProvider(widget.receiptId).notifier,
+              )
+              .refresh();
+        },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: AppSpacing.pagePadding,
@@ -173,11 +206,19 @@ class ReceiptDetailPage extends ConsumerWidget {
     );
   }
 
-  void _handleAction(
-    BuildContext context,
+  Future<void> _handleAction(
     ReceiptEntity receipt,
     ActionCapability action,
-  ) {
+  ) async {
+    if (!action.enabled) {
+      return;
+    }
+
+    if (action.type == TaskActionType.startWeighing) {
+      await _launchReceiveScan(receipt);
+      return;
+    }
+
     final location = resolveNamedRouteLocation(
       router: GoRouter.of(context),
       routeName: action.routeName,
@@ -185,7 +226,11 @@ class ReceiptDetailPage extends ConsumerWidget {
     );
 
     if (location != null) {
-      context.go(location);
+      await context.push(location);
+      return;
+    }
+
+    if (!mounted) {
       return;
     }
 
@@ -196,6 +241,70 @@ class ReceiptDetailPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _launchReceiveScan(ReceiptEntity receipt) async {
+    final result = await context.push<ScanFlowResult>(
+      buildScanBarcodeLocation(
+        launchContext: ScanLaunchContext(
+          mode: ScanMode.receive,
+          referenceId: receipt.id,
+          referenceNo: receipt.receiptNo,
+          warehouseId: receipt.warehouse.id,
+          warehouseCode: receipt.warehouse.code,
+          originRouteName: AppRouteNames.receiptDetail,
+          originRouteParams: <String, String>{
+            AppRoutePaths.receiptIdParam: receipt.id,
+          },
+        ),
+      ),
+    );
+
+    if (!mounted || result == null || !result.success) {
+      return;
+    }
+
+    ref
+        .read(scanFlowProjectionControllerProvider.notifier)
+        .applyReceiveResult(result);
+
+    await ref
+        .read(receiptDetailControllerProvider(widget.receiptId).notifier)
+        .refresh();
+    await ref.read(taskQueueControllerProvider.notifier).refresh();
+    ref.invalidate(receiptListControllerProvider);
+    ref.invalidate(appShellControllerProvider);
+
+    if (!mounted) {
+      return;
+    }
+
+    final itemCode = result.itemCode?.trim();
+    final locationCode = result.locationCode?.trim();
+    final quantityLabel = result.quantity == null
+        ? null
+        : _formatQuantity(result.quantity!);
+    final content = <String>[
+      'Đã cập nhật ${receipt.receiptNo}.',
+      if (quantityLabel != null && itemCode != null)
+        'Nhận $quantityLabel cho $itemCode.',
+      if (locationCode != null && locationCode.isNotEmpty)
+        'Vị trí $locationCode.',
+    ].join(' ');
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(content),
+          action: SnackBarAction(
+            label: 'Về task queue',
+            onPressed: () {
+              context.go(AppRoutePaths.tasks);
+            },
+          ),
+        ),
+      );
   }
 }
 
@@ -410,6 +519,14 @@ String _valueOrFallback(String? value) {
     return 'Chưa cập nhật';
   }
   return value!.trim();
+}
+
+String _formatQuantity(double value) {
+  if (value.truncateToDouble() == value) {
+    return value.toStringAsFixed(0);
+  }
+
+  return value.toString();
 }
 
 bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;

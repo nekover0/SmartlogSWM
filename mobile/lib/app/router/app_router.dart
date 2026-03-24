@@ -20,6 +20,8 @@ import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
+const String _scanOriginParamPrefix = 'originParam.';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _GoRouterRefreshNotifier();
   ref.onDispose(refreshNotifier.dispose);
@@ -201,6 +203,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               warehouseId: queryParameters['warehouseId'],
               warehouseCode: queryParameters['warehouseCode'],
               originRouteName: queryParameters['originRouteName'],
+              originRouteParams: _extractScanOriginRouteParams(queryParameters),
             ),
           );
         },
@@ -339,6 +342,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+String buildScanBarcodeLocation({required ScanLaunchContext launchContext}) {
+  return Uri(
+    path: AppRoutePaths.scanBarcode,
+    queryParameters: _buildScanBarcodeQueryParameters(launchContext),
+  ).toString();
+}
+
 String? resolveNamedRouteLocation({
   required GoRouter router,
   String? routeName,
@@ -359,6 +369,64 @@ String? resolveNamedRouteLocation({
   } catch (_) {
     return null;
   }
+}
+
+Map<String, String> _buildScanBarcodeQueryParameters(
+  ScanLaunchContext launchContext,
+) {
+  final queryParameters = <String, String>{
+    'mode': launchContext.mode.name,
+  };
+
+  _addQueryParameter(queryParameters, 'referenceId', launchContext.referenceId);
+  _addQueryParameter(queryParameters, 'referenceNo', launchContext.referenceNo);
+  _addQueryParameter(queryParameters, 'warehouseId', launchContext.warehouseId);
+  _addQueryParameter(
+    queryParameters,
+    'warehouseCode',
+    launchContext.warehouseCode,
+  );
+  _addQueryParameter(
+    queryParameters,
+    'originRouteName',
+    launchContext.originRouteName,
+  );
+
+  for (final entry in launchContext.originRouteParams.entries) {
+    queryParameters['$_scanOriginParamPrefix${entry.key}'] = entry.value;
+  }
+
+  return queryParameters;
+}
+
+Map<String, String> _extractScanOriginRouteParams(
+  Map<String, String> queryParameters,
+) {
+  final originRouteParams = <String, String>{};
+
+  for (final entry in queryParameters.entries) {
+    if (!entry.key.startsWith(_scanOriginParamPrefix)) {
+      continue;
+    }
+
+    originRouteParams[entry.key.substring(_scanOriginParamPrefix.length)] =
+        entry.value;
+  }
+
+  return originRouteParams;
+}
+
+void _addQueryParameter(
+  Map<String, String> queryParameters,
+  String key,
+  String? value,
+) {
+  final normalizedValue = value?.trim();
+  if (normalizedValue == null || normalizedValue.isEmpty) {
+    return;
+  }
+
+  queryParameters[key] = normalizedValue;
 }
 
 class AppAuthGatePage extends ConsumerWidget {

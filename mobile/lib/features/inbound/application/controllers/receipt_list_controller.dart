@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/features/inbound/data/contracts/receipt_contract.dart';
 import 'package:smartlog_swm_mobile/features/inbound/data/repositories/receipt_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/inbound/domain/repositories/receipt_repository.dart';
+import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_flow_projection_controller.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
 final receiptListControllerProvider =
@@ -16,17 +17,19 @@ class ReceiptListController extends AsyncNotifier<ReceiptListState> {
 
   @override
   Future<ReceiptListState> build() async {
+    final projectionState = ref.watch(scanFlowProjectionControllerProvider);
     final receipts = await _repository.getReceipts();
-    return ReceiptListState(allItems: receipts);
+    return ReceiptListState(allItems: projectionState.projectReceipts(receipts));
   }
 
   Future<void> refresh() async {
     final currentState = state.valueOrNull;
+    final projectionState = ref.read(scanFlowProjectionControllerProvider);
     state = const AsyncLoading<ReceiptListState>().copyWithPrevious(state);
     state = await AsyncValue.guard(() async {
       final receipts = await _repository.getReceipts();
       return ReceiptListState(
-        allItems: receipts,
+        allItems: projectionState.projectReceipts(receipts),
         selectedStatus: currentState?.selectedStatus,
         searchQuery: currentState?.searchQuery ?? '',
       );

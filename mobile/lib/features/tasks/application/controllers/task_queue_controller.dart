@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_flow_projection_controller.dart';
 import 'package:smartlog_swm_mobile/features/tasks/data/contracts/task_item_contract.dart';
 import 'package:smartlog_swm_mobile/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/tasks/domain/repositories/task_repository.dart';
@@ -16,13 +17,15 @@ class TaskQueueController extends AsyncNotifier<TaskQueueState> {
 
   @override
   Future<TaskQueueState> build() async {
+    final projectionState = ref.watch(scanFlowProjectionControllerProvider);
     final items = await _repository.getTaskQueue();
-    return TaskQueueState(allItems: items);
+    return TaskQueueState(allItems: projectionState.projectTasks(items));
   }
 
   Future<void> refresh() async {
     final currentState = state.valueOrNull;
-    final items = await _repository.getTaskQueue();
+    final projectionState = ref.read(scanFlowProjectionControllerProvider);
+    final items = projectionState.projectTasks(await _repository.getTaskQueue());
 
     state = AsyncData(
       TaskQueueState(
