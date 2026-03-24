@@ -30,7 +30,7 @@ class ScanSessionController
         state: ScanSessionState.permissionPending,
         errorMessage: null,
       ),
-      flowResult: null,
+      clearFlowResult: true,
     );
 
     final currentStatus = await _permissionService.getCameraPermissionStatus();
@@ -68,15 +68,22 @@ class ScanSessionController
       return;
     }
 
+    final timestamp = DateTime.now().toUtc();
+
     state = state.copyWith(
-      session: _mutateSession(
-        state.session,
+      session: state.session.copyWith(
         state: ScanSessionState.scanning,
         lookupCode: null,
+        resolvedItemCode: null,
+        resolvedLocationCode: null,
+        referenceId: state.context.referenceId,
+        warehouseId: state.context.warehouseId,
+        quantity: null,
         errorMessage: null,
         syncState: SyncState.pending,
+        updatedAt: timestamp,
       ),
-      flowResult: null,
+      clearFlowResult: true,
     );
   }
 
@@ -101,7 +108,7 @@ class ScanSessionController
         lookupCode: lookupCode.trim(),
         errorMessage: null,
       ),
-      flowResult: null,
+      clearFlowResult: true,
     );
 
     try {
@@ -145,37 +152,49 @@ class ScanSessionController
   }
 
   void updateReferenceId(String value) {
+    final timestamp = DateTime.now().toUtc();
     state = state.copyWith(
-      session: _mutateSession(
-        state.session,
+      session: state.session.copyWith(
+        state: _editingState(state.session.state),
         referenceId: _normalizeText(value),
+        errorMessage: null,
+        updatedAt: timestamp,
       ),
     );
   }
 
   void updateWarehouseId(String value) {
+    final timestamp = DateTime.now().toUtc();
     state = state.copyWith(
-      session: _mutateSession(
-        state.session,
+      session: state.session.copyWith(
+        state: _editingState(state.session.state),
         warehouseId: _normalizeText(value),
+        errorMessage: null,
+        updatedAt: timestamp,
       ),
     );
   }
 
   void updateResolvedLocationCode(String value) {
+    final timestamp = DateTime.now().toUtc();
     state = state.copyWith(
-      session: _mutateSession(
-        state.session,
+      session: state.session.copyWith(
+        state: _editingState(state.session.state),
         resolvedLocationCode: _normalizeText(value),
+        errorMessage: null,
+        updatedAt: timestamp,
       ),
     );
   }
 
   void updateQuantity(double quantity) {
+    final timestamp = DateTime.now().toUtc();
     state = state.copyWith(
-      session: _mutateSession(
-        state.session,
+      session: state.session.copyWith(
+        state: _editingState(state.session.state),
         quantity: quantity,
+        errorMessage: null,
+        updatedAt: timestamp,
       ),
     );
   }
@@ -185,7 +204,7 @@ class ScanSessionController
       state = state.copyWith(
         session: _mutateSession(
           state.session,
-          state: ScanSessionState.submitFailed,
+          state: ScanSessionState.formReady,
           errorMessage: 'Phiên scan chưa đủ dữ liệu để submit.',
           syncState: SyncState.failed,
         ),
@@ -199,7 +218,7 @@ class ScanSessionController
         state: ScanSessionState.submitting,
         errorMessage: null,
       ),
-      flowResult: null,
+      clearFlowResult: true,
     );
 
     try {
@@ -235,6 +254,12 @@ class ScanSessionController
         ),
       );
     }
+  }
+
+  ScanSessionState _editingState(ScanSessionState currentState) {
+    return currentState == ScanSessionState.submitFailed
+        ? ScanSessionState.formReady
+        : currentState;
   }
 
   ScanSessionEntity _mutateSession(
@@ -305,7 +330,8 @@ class ScanSessionControllerState {
     final request = submitRequest;
     final quantity = request.quantity ?? 0;
     return context.isReceive &&
-        session.state == ScanSessionState.formReady &&
+        (session.state == ScanSessionState.formReady ||
+            session.state == ScanSessionState.submitFailed) &&
         quantity > 0 &&
         _hasValue(request.referenceId) &&
         _hasValue(request.warehouseId) &&

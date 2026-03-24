@@ -12,6 +12,9 @@ import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
+import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
+import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
@@ -189,13 +192,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.scanBarcode,
         name: AppRouteNames.scanBarcode,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.qr_code_scanner_rounded,
-            frameLabel: '03. Refined Quick Scan Screen',
-            routePath: AppRoutePaths.scanBarcode,
-            title: 'Scan barcode',
-            description:
-                'Màn quét nhanh bám theo wireframe quick scan của Figma.',
+          final queryParameters = state.uri.queryParameters;
+          return BarcodeScanPage(
+            launchContext: ScanLaunchContext(
+              mode: _parseScanMode(queryParameters['mode']) ?? ScanMode.receive,
+              referenceId: queryParameters['referenceId'],
+              referenceNo: queryParameters['referenceNo'],
+              warehouseId: queryParameters['warehouseId'],
+              warehouseCode: queryParameters['warehouseCode'],
+              originRouteName: queryParameters['originRouteName'],
+            ),
           );
         },
       ),
@@ -547,4 +553,18 @@ class _GoRouterRefreshNotifier extends ChangeNotifier {
   void markNeedsRefresh() {
     notifyListeners();
   }
+}
+
+ScanMode? _parseScanMode(String? rawValue) {
+  if (rawValue == null || rawValue.trim().isEmpty) {
+    return null;
+  }
+
+  for (final mode in ScanMode.values) {
+    if (mode.name == rawValue.trim()) {
+      return mode;
+    }
+  }
+
+  return null;
 }

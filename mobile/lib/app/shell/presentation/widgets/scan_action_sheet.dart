@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -14,15 +15,20 @@ Future<void> showScanActionSheet(BuildContext context) {
       return _ScanActionSheet(
         onBarcodeTap: () {
           Navigator.of(sheetContext).pop();
-          context.go(AppRoutePaths.scanBarcode);
+          context.push(
+            Uri(
+              path: AppRoutePaths.scanBarcode,
+              queryParameters: <String, String>{'mode': ScanMode.receive.name},
+            ).toString(),
+          );
         },
         onOcrTap: () {
           Navigator.of(sheetContext).pop();
-          context.go(AppRoutePaths.ocrCapture);
+          context.push(AppRoutePaths.ocrCapture);
         },
         onManualTap: () {
           Navigator.of(sheetContext).pop();
-          context.go(AppRoutePaths.scanManual);
+          context.push(AppRoutePaths.scanManual);
         },
       );
     },
@@ -88,7 +94,7 @@ class _ScanActionSheet extends StatelessWidget {
             _ActionTile(
               icon: Icons.qr_code_scanner_rounded,
               title: 'Barcode / QR',
-              description: 'Mở camera để quét mã vật tư, vị trí hoặc phiếu.',
+              description: 'Mở quick scan receive va tra ve ket qua sau khi submit.',
               onTap: onBarcodeTap,
             ),
             const SizedBox(height: AppSpacing.sm),
