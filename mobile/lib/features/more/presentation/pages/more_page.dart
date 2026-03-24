@@ -145,7 +145,7 @@ class _HeroCard extends StatelessWidget {
             runSpacing: AppSpacing.xs,
             children: [
               _Pill(label: '${shellState.badgeCounts.more} module phụ'),
-              const _Pill(label: 'Phiếu nhập sẽ xuất hiện ở đây'),
+              const _Pill(label: 'Inbound queue đã sẵn sàng'),
             ],
           ),
         ],

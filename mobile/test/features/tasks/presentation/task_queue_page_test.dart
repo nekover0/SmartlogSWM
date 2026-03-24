@@ -9,6 +9,7 @@ import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_ac
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_user.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/tasks/data/contracts/task_item_contract.dart';
 import 'package:smartlog_swm_mobile/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/tasks/domain/repositories/task_repository.dart';
@@ -140,11 +141,9 @@ void main() {
     await tester.tap(primaryAction);
     await tester.pumpAndSettle();
 
-    expect(find.text('Chi tiết phiếu nhập'), findsWidgets);
-    expect(
-      find.textContaining('/inbound/receipts/rcp-20260323-001'),
-      findsOneWidget,
-    );
+    expect(find.byType(ReceiptDetailPage), findsOneWidget);
+    expect(find.text('Chi tiết phiếu nhập'), findsOneWidget);
+    expect(find.text('RCP-240323-001'), findsWidgets);
   });
 }
 

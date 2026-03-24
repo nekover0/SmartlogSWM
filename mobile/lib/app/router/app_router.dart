@@ -10,6 +10,8 @@ import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_c
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
+import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
@@ -113,14 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.receiptList,
         name: AppRouteNames.receiptList,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.call_received_rounded,
-            frameLabel: '08. Danh sách Phiếu Nhập (v3)',
-            routePath: AppRoutePaths.receiptList,
-            title: 'Phiếu nhập',
-            description:
-                'Danh sách phiếu nhập khớp với frame vận hành inbound của Figma.',
-          );
+          return const ReceiptListPage();
         },
       ),
       GoRoute(
@@ -143,14 +138,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final receiptId =
               state.pathParameters[AppRoutePaths.receiptIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.receipt_long_rounded,
-            frameLabel: '09. Chi tiết Phiếu Nhập (Refined Flow)',
-            routePath: AppRoutePaths.receiptDetailPath(receiptId),
-            title: 'Chi tiết phiếu nhập',
-            description:
-                'Chi tiết phiếu nhập giữ chỗ cho bản dựng màn inbound v3.',
-          );
+          return ReceiptDetailPage(receiptId: receiptId);
         },
       ),
       GoRoute(
