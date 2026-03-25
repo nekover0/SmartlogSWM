@@ -24,6 +24,18 @@ class AccountPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        leading: IconButton(
+          key: const Key('account_back_button'),
+          tooltip: 'Quay lại',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(AppRoutePaths.more);
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Tài khoản'),
         actions: [
           IconButton(

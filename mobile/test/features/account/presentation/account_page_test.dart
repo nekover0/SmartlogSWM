@@ -19,6 +19,7 @@ void main() {
         session: _buildSession(role: 'Warehouse Manager'),
       );
 
+      expect(find.byKey(const Key('account_back_button')), findsOneWidget);
       expect(find.byKey(const Key('account_profile_header')), findsOneWidget);
       expect(
         find.byKey(const Key('account_role_summary_card')),
