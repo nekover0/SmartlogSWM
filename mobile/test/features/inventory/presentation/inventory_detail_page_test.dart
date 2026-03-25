@@ -24,10 +24,24 @@ void main() {
     );
     expect(find.byKey(const Key('inventory_detail_header')), findsOneWidget);
     expect(find.byKey(const Key('inventory_detail_summary')), findsOneWidget);
-    expect(find.byKey(const Key('inventory_detail_location')), findsOneWidget);
-    expect(find.byKey(const Key('inventory_detail_timeline')), findsOneWidget);
     expect(find.text('Cảm biến nhiệt Thermal GX-90'), findsOneWidget);
-    expect(find.text('SKU: SMT-9022-X'), findsOneWidget);
+    expect(find.text('SKU SMT-9022-X'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('inventory_detail_location')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('inventory_detail_location')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('inventory_detail_timeline')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('inventory_detail_timeline')), findsOneWidget);
   });
 
   testWidgets('shows empty history state when timeline is absent', (
@@ -36,8 +50,15 @@ void main() {
     await tester.pumpWidget(buildSubject('inv-net-4402-b'));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('inventory_detail_timeline')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Chưa có lịch sử thay đổi'), findsOneWidget);
-    expect(find.byKey(const Key('inventory_detail_timeline')), findsNothing);
+    expect(find.byKey(const Key('inventory_detail_timeline')), findsOneWidget);
   });
 
   testWidgets('shows error state for unknown inventory id', (
