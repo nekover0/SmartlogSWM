@@ -51,7 +51,14 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
     if (receiptState.hasError && receipt == null) {
       if (_isMissingReceiptError(receiptState.error)) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Chi tiết phiếu nhập')),
+          appBar: AppBar(
+            leading: IconButton(
+              onPressed: _handleBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: 'Quay lại',
+            ),
+            title: const Text('Chi tiết phiếu nhập'),
+          ),
           body: AppEmptyState(
             title: 'Không tìm thấy phiếu nhập',
             message:
@@ -65,7 +72,14 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
       }
 
       return Scaffold(
-        appBar: AppBar(title: const Text('Chi tiết phiếu nhập')),
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: _handleBack,
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Quay lại',
+          ),
+          title: const Text('Chi tiết phiếu nhập'),
+        ),
         body: AppErrorState(
           title: 'Không tải được chi tiết phiếu nhập',
           message: '${receiptState.error}',
@@ -89,6 +103,11 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4FAFF),
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: _handleBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Quay lại',
+        ),
         title: const Text('Inbound Detail'),
         actions: [
           IconButton(
@@ -161,6 +180,14 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
         ),
       ),
     );
+  }
+
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(AppRoutePaths.receiptList);
   }
 
   Future<void> _handleAction(
