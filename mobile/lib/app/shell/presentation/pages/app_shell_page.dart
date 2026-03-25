@@ -24,7 +24,6 @@ class AppShellPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      extendBody: true,
       appBar: AppTopBar(
         site: shellState.currentSite,
         title: currentTab.title,

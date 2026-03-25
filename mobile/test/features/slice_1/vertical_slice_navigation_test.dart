@@ -51,10 +51,7 @@ void main() {
 
     return UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(
-        routerConfig: router,
-        theme: AppTheme.light(),
-      ),
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
   }
 
@@ -102,7 +99,7 @@ void main() {
 
       expect(find.byType(BarcodeScanPage), findsNothing);
       expect(find.byType(ReceiptDetailPage), findsOneWidget);
-      expect(find.text('Đang cân 1'), findsOneWidget);
+      expect(find.text('Quét thêm barcode'), findsOneWidget);
       expect(find.text('12 CAN'), findsOneWidget);
       expect(find.text('Về task queue'), findsOneWidget);
 
