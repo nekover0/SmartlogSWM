@@ -50,6 +50,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('receipt_list_back_button')), findsOneWidget);
     expect(find.byKey(const Key('receipt_list_create_button')), findsOneWidget);
     expect(find.text('RCP-240323-001'), findsOneWidget);
     expect(find.text('RCP-240323-004'), findsOneWidget);
@@ -151,7 +152,9 @@ class _FakeReceiptRepository implements ReceiptRepository {
 
   @override
   Future<ReceiptEntity> getReceiptById(String receiptId) async {
-    return (await getReceipts()).firstWhere((receipt) => receipt.id == receiptId);
+    return (await getReceipts()).firstWhere(
+      (receipt) => receipt.id == receiptId,
+    );
   }
 }
 
@@ -177,20 +180,13 @@ ReceiptEntity _buildReceipt({
     id: id,
     receiptNo: receiptNo,
     status: status,
-    owner: OwnerSummary(
-      id: 'owner-$id',
-      code: ownerCode,
-      name: ownerName,
-    ),
+    owner: OwnerSummary(id: 'owner-$id', code: ownerCode, name: ownerName),
     warehouse: WarehouseSummary(
       id: 'warehouse-$id',
       code: warehouseCode,
       name: warehouseName,
     ),
-    vehicle: VehicleInfo(
-      plateNumber: plateNumber,
-      driverName: 'Driver $id',
-    ),
+    vehicle: VehicleInfo(plateNumber: plateNumber, driverName: 'Driver $id'),
     purchaseOrderNo: purchaseOrderNo,
     billOfLadingNo: billOfLadingNo,
     expectedWeightKg: expectedWeightKg,
@@ -198,10 +194,7 @@ ReceiptEntity _buildReceipt({
     varianceWeightKg: varianceWeightKg,
     syncState: syncState,
     availableActions: const <ActionCapability>[
-      ActionCapability(
-        type: TaskActionType.open,
-        label: 'Xem phiếu',
-      ),
+      ActionCapability(type: TaskActionType.open, label: 'Xem phiếu'),
     ],
     note: note,
     createdAt: DateTime.utc(2026, 3, 24, 6, 40),

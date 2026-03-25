@@ -12,6 +12,7 @@ import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
+import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
@@ -75,14 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final inventoryId =
               state.pathParameters[AppRoutePaths.inventoryIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.inventory_2_outlined,
-            frameLabel: '05. Inventory Details Screen',
-            routePath: AppRoutePaths.inventoryDetailPath(inventoryId),
-            title: 'Chi tiết tồn kho',
-            description:
-                'Chi tiết hàng hóa, trạng thái và hành động liên quan sẽ được thay bằng màn Figma tương ứng.',
-          );
+          return InventoryDetailPage(inventoryId: inventoryId);
         },
       ),
       GoRoute(
@@ -374,9 +368,7 @@ String? resolveNamedRouteLocation({
 Map<String, String> _buildScanBarcodeQueryParameters(
   ScanLaunchContext launchContext,
 ) {
-  final queryParameters = <String, String>{
-    'mode': launchContext.mode.name,
-  };
+  final queryParameters = <String, String>{'mode': launchContext.mode.name};
 
   _addQueryParameter(queryParameters, 'referenceId', launchContext.referenceId);
   _addQueryParameter(queryParameters, 'referenceNo', launchContext.referenceNo);

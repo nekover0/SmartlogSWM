@@ -83,6 +83,18 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4FAFF),
       appBar: AppBar(
+        leading: IconButton(
+          key: const Key('receipt_list_back_button'),
+          tooltip: 'Quay lại',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(AppRoutePaths.tasks);
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Phiếu nhập'),
         actions: [
           IconButton(
