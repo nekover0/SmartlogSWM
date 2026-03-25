@@ -9,6 +9,7 @@ Future<void> showScanActionSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (BuildContext sheetContext) {
@@ -49,6 +50,7 @@ class _ScanActionSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
     return Container(
       decoration: const BoxDecoration(
@@ -94,7 +96,8 @@ class _ScanActionSheet extends StatelessWidget {
             _ActionTile(
               icon: Icons.qr_code_scanner_rounded,
               title: 'Barcode / QR',
-              description: 'Mở quick scan receive va tra ve ket qua sau khi submit.',
+              description:
+                  'Mở quick scan receive va tra ve ket qua sau khi submit.',
               onTap: onBarcodeTap,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -111,6 +114,7 @@ class _ScanActionSheet extends StatelessWidget {
               description: 'Nhập SKU, vị trí hoặc mã tham chiếu bằng tay.',
               onTap: onManualTap,
             ),
+            if (bottomInset > 0) SizedBox(height: bottomInset),
           ],
         ),
       ),

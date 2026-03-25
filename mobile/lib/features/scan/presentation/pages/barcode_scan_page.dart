@@ -7,7 +7,6 @@ import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_s
 import 'package:smartlog_swm_mobile/features/scan/data/contracts/scan_session_contract.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/receive_scan_form_sheet.dart';
-import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/scan_action_selector.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/scanner_overlay.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
@@ -15,10 +14,7 @@ import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_forbidden_state.dart';
 
 class BarcodeScanPage extends ConsumerStatefulWidget {
-  const BarcodeScanPage({
-    super.key,
-    required this.launchContext,
-  });
+  const BarcodeScanPage({super.key, required this.launchContext});
 
   final ScanLaunchContext launchContext;
 
@@ -74,146 +70,143 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
     final showReceiveForm = _showReceiveForm(scanState.session.state);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4FAFF),
       appBar: AppBar(
-        title: const Text('Scan'),
+        title: const Text('Quét mã'),
+        centerTitle: true,
         leading: IconButton(
           tooltip: 'Dong scan',
           onPressed: () => _closePage(context),
           icon: const Icon(Icons.close_rounded),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Tuỳ chọn scan',
+            onPressed: () {},
+            icon: const Icon(Icons.tune_rounded),
+          ),
+        ],
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              Color(0xFFE8EEF8),
-              AppColors.background,
-              Color(0xFFF8FAFD),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              _ScanModeStrip(selectedMode: widget.launchContext.mode),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: showReceiveForm ? 310 : 0),
+                  child: _PreviewPanel(
+                    state: scanState,
+                    lookupController: _lookupController,
+                    onLookup: _handleLookup,
+                    onLookupNotFound: _lookupFixtureNotFound,
+                    onRequestPermission: () {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .requestCameraAccess();
+                    },
+                  ),
+                ),
+              ),
+              if (scanState.session.state == ScanSessionState.lookupNotFound)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  child: _StatusBanner(
+                    icon: Icons.warning_amber_rounded,
+                    toneColor: AppColors.danger,
+                    message:
+                        scanState.session.errorMessage ??
+                        'Khong tim thay ma vua quet.',
+                    actionLabel: 'Thu lai',
+                    onAction: () {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .restartScanning();
+                    },
+                  ),
+                ),
             ],
           ),
-        ),
-        child: Stack(
-          children: [
-            ListView(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                showReceiveForm ? 380 : AppSpacing.xxl,
-              ),
-              children: [
-                ScanActionSelector(
-                  selectedMode: widget.launchContext.mode,
-                  supportedModes: const <ScanMode>{ScanMode.receive},
+          if (showReceiveForm)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                _PreviewPanel(
-                  state: scanState,
-                  lookupController: _lookupController,
-                  onLookup: _handleLookup,
-                  onLookupNotFound: _lookupFixtureNotFound,
-                  onRequestPermission: () {
-                    ref
-                        .read(
-                          scanSessionControllerProvider(widget.launchContext)
-                              .notifier,
-                        )
-                        .requestCameraAccess();
-                  },
-                ),
-                if (scanState.session.state == ScanSessionState.lookupNotFound)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                    child: _StatusBanner(
-                      icon: Icons.warning_amber_rounded,
-                      toneColor: AppColors.danger,
-                      message:
-                          scanState.session.errorMessage ??
-                          'Khong tim thay ma vua quet.',
-                      actionLabel: 'Thu lai',
-                      onAction: () {
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .restartScanning();
-                      },
-                    ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: ReceiveScanFormSheet(
+                    state: scanState,
+                    referenceController: _referenceController,
+                    warehouseController: _warehouseController,
+                    locationController: _locationController,
+                    quantityController: _quantityController,
+                    onReferenceChanged: (value) {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .updateReferenceId(value);
+                    },
+                    onWarehouseChanged: (value) {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .updateWarehouseId(value);
+                    },
+                    onLocationChanged: (value) {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .updateResolvedLocationCode(value);
+                    },
+                    onQuantityChanged: (value) {
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .updateQuantity(_parseQuantity(value));
+                    },
+                    onSubmit: _handleSubmit,
+                    onRestart: () {
+                      FocusScope.of(context).unfocus();
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .restartScanning();
+                    },
                   ),
-              ],
+                ),
+              ),
             ),
-            if (showReceiveForm)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: ReceiveScanFormSheet(
-                      state: scanState,
-                      referenceController: _referenceController,
-                      warehouseController: _warehouseController,
-                      locationController: _locationController,
-                      quantityController: _quantityController,
-                      onReferenceChanged: (value) {
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .updateReferenceId(value);
-                      },
-                      onWarehouseChanged: (value) {
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .updateWarehouseId(value);
-                      },
-                      onLocationChanged: (value) {
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .updateResolvedLocationCode(value);
-                      },
-                      onQuantityChanged: (value) {
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .updateQuantity(_parseQuantity(value));
-                      },
-                      onSubmit: _handleSubmit,
-                      onRestart: () {
-                        FocusScope.of(context).unfocus();
-                        ref
-                            .read(
-                              scanSessionControllerProvider(
-                                widget.launchContext,
-                              ).notifier,
-                            )
-                            .restartScanning();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -331,6 +324,83 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
   }
 }
 
+class _ScanModeStrip extends StatelessWidget {
+  const _ScanModeStrip({required this.selectedMode});
+
+  final ScanMode selectedMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _ModeChip(
+              label: 'Nhập kho',
+              selected: selectedMode == ScanMode.receive,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            const _ModeChip(label: 'Xuất kho', selected: false),
+            const SizedBox(width: AppSpacing.xs),
+            const _ModeChip(label: 'Kiểm kê', selected: false),
+            const SizedBox(width: AppSpacing.xs),
+            const _ModeChip(label: 'Chuyển vị trí', selected: false),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  const _ModeChip({required this.label, required this.selected});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: selected ? AppColors.brand : const Color(0xFFDFF1FB),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: selected
+            ? const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 2,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: selected ? AppColors.surface : AppColors.brand,
+        ),
+      ),
+    );
+  }
+}
+
 class _PreviewPanel extends StatelessWidget {
   const _PreviewPanel({
     required this.state,
@@ -349,7 +419,6 @@ class _PreviewPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = state.session;
-    final theme = Theme.of(context);
     final cameraReady = session.cameraGranted;
     final isPending = session.state == ScanSessionState.permissionPending;
     final isDenied = session.state == ScanSessionState.cameraDenied;
@@ -357,164 +426,124 @@ class _PreviewPanel extends StatelessWidget {
 
     return Container(
       key: const Key('barcode_scan_preview_panel'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF12253F), Color(0xFF09131F)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
+      color: const Color(0xFF001C39),
+      child: Stack(
         children: [
-          SizedBox(
-            height: 420,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(32),
-                      ),
-                      gradient: RadialGradient(
-                        center: const Alignment(-0.3, -0.7),
-                        radius: 1.2,
-                        colors: [
-                          AppColors.brandAccent.withValues(alpha: 0.46),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                if (cameraReady) ...[
-                  const Positioned(
-                    left: AppSpacing.lg,
-                    top: AppSpacing.lg,
-                    child: _TopPreviewBadge(
-                      icon: Icons.bolt_rounded,
-                      label: 'Demo receive fixture',
-                    ),
-                  ),
-                  if (session.resolvedItemCode != null)
-                    Positioned(
-                      right: AppSpacing.lg,
-                      top: AppSpacing.lg,
-                      child: _TopPreviewBadge(
-                        icon: Icons.inventory_2_rounded,
-                        label: session.resolvedItemCode!,
-                      ),
-                    ),
-                  ScannerOverlay(
-                    title: _overlayTitle(session.state),
-                    subtitle: _overlaySubtitle(session),
-                  ),
-                ] else if (isPending)
-                  const Center(
-                    child: _PermissionState(
-                      key: Key('barcode_scan_permission_pending'),
-                      icon: Icons.videocam_rounded,
-                      title: 'Dang xin quyen camera',
-                      message:
-                          'Ban build dau tien dung preview gia lap nhung van render day du state permission.',
-                      loading: true,
-                    ),
-                  )
-                else if (isDenied)
-                  KeyedSubtree(
-                    key: const Key('barcode_scan_permission_denied'),
-                    child: AppForbiddenState(
-                      title: 'Cần quyền camera',
-                      message:
-                          session.errorMessage ??
-                          'Hãy cấp quyền camera để tiếp tục barcode receive.',
-                      retryLabel: 'Cấp quyền lại',
-                      onRetry: onRequestPermission,
-                    ),
-                  )
-                else
-                  const Center(
-                    child: _PermissionState(
-                      icon: Icons.qr_code_scanner_rounded,
-                      title: 'Dang khoi dong phien quet',
-                      message: 'Moi truong demo dang chuan bi preview gia lap.',
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            padding: AppSpacing.cardPadding,
-            decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(32),
-              ),
-              border: Border(
-                top: BorderSide(
-                  color: AppColors.surface.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tra ma tu preview gia lap',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.surface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  cameraReady
-                      ? 'Nhap barcode/QR de goi fixture lookup cho luong receive.'
-                      : 'Action lookup se mo sau khi state permission cho phep quet.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.surface.withValues(alpha: 0.74),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('barcode_scan_lookup_field'),
-                        controller: lookupController,
-                        enabled: cameraReady && !isWorking,
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: (_) {
-                          onLookup();
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'RCV-240325-001 hoac NOT-FOUND',
-                          prefixIcon: Icon(Icons.document_scanner_outlined),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    ElevatedButton.icon(
-                      key: const Key('barcode_scan_lookup_button'),
-                      onPressed: cameraReady && !isWorking
-                          ? () {
-                              onLookup();
-                            }
-                          : null,
-                      icon: const Icon(Icons.center_focus_strong_rounded),
-                      label: const Text('Tra'),
-                    ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(-0.7, -0.9),
+                  radius: 1.4,
+                  colors: [
+                    AppColors.surface.withValues(alpha: 0.12),
+                    Colors.transparent,
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+              ),
+            ),
+          ),
+          if (cameraReady)
+            ScannerOverlay(
+              title: _overlayTitle(session.state),
+              subtitle: _overlaySubtitle(session),
+            )
+          else if (isPending)
+            const Center(
+              child: _PermissionState(
+                key: Key('barcode_scan_permission_pending'),
+                icon: Icons.videocam_rounded,
+                title: 'Dang xin quyen camera',
+                message: 'Dang cap quyen de bat dau phien quet.',
+                loading: true,
+              ),
+            )
+          else if (isDenied)
+            KeyedSubtree(
+              key: const Key('barcode_scan_permission_denied'),
+              child: AppForbiddenState(
+                title: 'Cần quyền camera',
+                message:
+                    session.errorMessage ??
+                    'Hãy cấp quyền camera để tiếp tục barcode receive.',
+                retryLabel: 'Cấp quyền lại',
+                onRetry: onRequestPermission,
+              ),
+            )
+          else
+            const Center(
+              child: _PermissionState(
+                icon: Icons.qr_code_scanner_rounded,
+                title: 'Dang khoi dong phien quet',
+                message: 'Moi truong demo dang chuan bi preview gia lap.',
+              ),
+            ),
+          Positioned(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            top: 100,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Đưa mã vào khung',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.surface,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            bottom: AppSpacing.lg,
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.surface.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: TextField(
+                    key: const Key('barcode_scan_lookup_field'),
+                    controller: lookupController,
+                    enabled: cameraReady && !isWorking,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) {
+                      onLookup();
+                    },
+                    style: const TextStyle(color: AppColors.surface),
+                    decoration: InputDecoration(
+                      hintText: 'RCV-240325-001 hoặc NOT-FOUND',
+                      hintStyle: TextStyle(
+                        color: AppColors.surface.withValues(alpha: 0.7),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.document_scanner_outlined,
+                        color: AppColors.surface.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(
@@ -528,22 +557,30 @@ class _PreviewPanel extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.surface,
                           side: BorderSide(
-                            color: AppColors.surface.withValues(alpha: 0.16),
+                            color: AppColors.surface.withValues(alpha: 0.28),
                           ),
                         ),
-                        icon: const Icon(Icons.error_outline_rounded),
-                        label: const Text('Fixture loi'),
+                        icon: const Icon(Icons.keyboard_alt_rounded),
+                        label: const Text('Nhập SKU tay'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    _ToolBadge(
-                      icon: Icons.flashlight_off_rounded,
-                      label: 'Flash',
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    _ToolBadge(
-                      icon: Icons.cameraswitch_outlined,
-                      label: 'Cam',
+                    ElevatedButton(
+                      key: const Key('barcode_scan_lookup_button'),
+                      onPressed: cameraReady && !isWorking
+                          ? () {
+                              onLookup();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.warning,
+                        foregroundColor: AppColors.textPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                      ),
+                      child: const Text('Tra mã'),
                     ),
                   ],
                 ),
@@ -648,89 +685,13 @@ class _StatusBanner extends StatelessWidget {
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           TextButton(onPressed: onAction, child: Text(actionLabel)),
-        ],
-      ),
-    );
-  }
-}
-
-class _TopPreviewBadge extends StatelessWidget {
-  const _TopPreviewBadge({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.surface),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.surface,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToolBadge extends StatelessWidget {
-  const _ToolBadge({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.08),
-        borderRadius: AppSpacing.controlRadius,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: AppColors.surface),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.surface,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
         ],
       ),
     );

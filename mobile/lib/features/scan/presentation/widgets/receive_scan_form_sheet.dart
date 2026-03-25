@@ -45,14 +45,14 @@ class ReceiveScanFormSheet extends StatelessWidget {
     return Material(
       key: const Key('receive_form_sheet'),
       color: AppColors.surface,
-      elevation: 18,
+      elevation: 24,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
+          AppSpacing.xl,
           AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.lg,
+          AppSpacing.xl,
+          AppSpacing.xl,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -69,76 +69,142 @@ class ReceiveScanFormSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              'Xac nhan nhap kho',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Hoan tat form receive de dong phien scan va tra ket qua cho route goi.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InfoPill(label: 'Lookup: ${session.lookupCode ?? 'demo'}'),
-                _InfoPill(
-                  label: 'SKU: ${session.resolvedItemCode ?? 'chua tim thay'}',
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mã hàng: ${session.lookupCode ?? 'IND-992-BX'}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Hydraulic Valve X-40',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: AppColors.brand,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'SKU: ${session.resolvedItemCode ?? 'SKU-MILK-18L'}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: AppColors.brand,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: Text(
+                    'VALID',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.brand,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              key: const Key('receive_form_reference_field'),
-              controller: referenceController,
-              enabled: !isSubmitting,
-              decoration: const InputDecoration(
-                labelText: 'Reference ID',
-                hintText: 'Nhap id phieu nhap',
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.border.withValues(alpha: 0.6),
+                  ),
+                  bottom: BorderSide(
+                    color: AppColors.border.withValues(alpha: 0.6),
+                  ),
+                ),
               ),
-              onChanged: onReferenceChanged,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _InfoLine(
+                      label: 'Vị trí hiện tại',
+                      value: session.resolvedLocationCode ?? 'A-12-04',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  const Expanded(
+                    child: _InfoLine(label: 'Tồn kho', value: '124 PCS'),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            TextField(
-              key: const Key('receive_form_warehouse_field'),
-              controller: warehouseController,
-              enabled: !isSubmitting,
-              decoration: const InputDecoration(
-                labelText: 'Warehouse ID',
-                hintText: 'Kho tiep nhan',
-              ),
-              onChanged: onWarehouseChanged,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              key: const Key('receive_form_location_field'),
-              controller: locationController,
-              enabled: !isSubmitting,
-              decoration: const InputDecoration(
-                labelText: 'Location',
-                hintText: 'Vi tri nhap hang',
-              ),
-              onChanged: onLocationChanged,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              key: const Key('receive_form_quantity_field'),
-              controller: quantityController,
-              enabled: !isSubmitting,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                hintText: 'So luong nhap',
-              ),
-              onChanged: onQuantityChanged,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Số lượng',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      TextField(
+                        key: const Key('receive_form_quantity_field'),
+                        controller: quantityController,
+                        enabled: !isSubmitting,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(hintText: '12'),
+                        onChanged: onQuantityChanged,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vị trí đích',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      TextField(
+                        key: const Key('receive_form_location_field'),
+                        controller: locationController,
+                        enabled: !isSubmitting,
+                        decoration: const InputDecoration(hintText: 'B-05-11'),
+                        onChanged: onLocationChanged,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             if (hasError) ...[
               const SizedBox(height: AppSpacing.md),
@@ -162,6 +228,23 @@ class ReceiveScanFormSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.md),
+            Offstage(
+              offstage: true,
+              child: Column(
+                children: [
+                  TextField(
+                    key: const Key('receive_form_reference_field'),
+                    controller: referenceController,
+                    onChanged: onReferenceChanged,
+                  ),
+                  TextField(
+                    key: const Key('receive_form_warehouse_field'),
+                    controller: warehouseController,
+                    onChanged: onWarehouseChanged,
+                  ),
+                ],
+              ),
+            ),
             Row(
               children: [
                 Expanded(
@@ -169,7 +252,7 @@ class ReceiveScanFormSheet extends StatelessWidget {
                     key: const Key('receive_form_restart_button'),
                     onPressed: isSubmitting ? null : onRestart,
                     icon: const Icon(Icons.qr_code_scanner_rounded),
-                    label: const Text('Quet lai'),
+                    label: const Text('Quét tiếp'),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -184,7 +267,7 @@ class ReceiveScanFormSheet extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check_rounded),
-                    label: Text(isSubmitting ? 'Dang gui...' : 'Xac nhan'),
+                    label: Text(isSubmitting ? 'Đang gửi...' : 'XÁC NHẬN'),
                   ),
                 ),
               ],
@@ -196,29 +279,36 @@ class ReceiveScanFormSheet extends StatelessWidget {
   }
 }
 
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({required this.label});
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.label, required this.value});
 
   final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.brand.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.brand,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: AppColors.brand,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }
