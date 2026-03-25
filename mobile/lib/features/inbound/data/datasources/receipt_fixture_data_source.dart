@@ -46,7 +46,11 @@ class ReceiptFixtureDataSource {
     final receiptsJson = payload['receipts'] as List<dynamic>;
 
     _cachedReceipts = receiptsJson
-        .map((entry) => ReceiptDto.fromJson(entry as Map<String, dynamic>))
+        .map(
+          (entry) => ReceiptDto.fromJson(
+            _normalizeReceiptJson(entry as Map<String, dynamic>),
+          ),
+        )
         .toList(growable: false);
 
     return _cachedReceipts!;
@@ -85,6 +89,20 @@ class ReceiptFixtureDataSource {
     final rawJson = await _assetBundle.loadString(fixturePath);
     final payload = jsonDecode(rawJson) as Map<String, dynamic>;
     final receiptJson = payload['receipt'] as Map<String, dynamic>;
-    return ReceiptDto.fromJson(receiptJson);
+    return ReceiptDto.fromJson(_normalizeReceiptJson(receiptJson));
+  }
+
+  Map<String, dynamic> _normalizeReceiptJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+    final status = normalized['status'];
+    if (status is String) {
+      normalized['status'] = switch (status) {
+        'weighing_1' => 'weighing1',
+        'weighing_2' => 'weighing2',
+        _ => status,
+      };
+    }
+
+    return normalized;
   }
 }

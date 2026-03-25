@@ -28,7 +28,11 @@ class ReceiptStatusChipBar extends StatelessWidget {
             onPressed: () => onSelected(null),
           ),
           const SizedBox(width: AppSpacing.xs),
-          for (var index = 0; index < state.availableStatuses.length; index++) ...[
+          for (
+            var index = 0;
+            index < state.availableStatuses.length;
+            index++
+          ) ...[
             _ReceiptStatusChip(
               key: Key(
                 'receipt_status_chip_${state.availableStatuses[index].name}',
@@ -63,21 +67,56 @@ class _ReceiptStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text('$label ($count)'),
-      selected: selected,
-      onSelected: (_) => onPressed(),
-      selectedColor: AppColors.brand.withValues(alpha: 0.14),
-      checkmarkColor: AppColors.brand,
-      labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: selected ? AppColors.brand : AppColors.textPrimary,
-        fontWeight: FontWeight.w700,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.brand : const Color(0xFFDFF1FB),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? AppColors.surface : AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: AppSpacing.xs),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.surface.withValues(alpha: 0.2)
+                        : AppColors.brand,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.surface,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
-      side: BorderSide(
-        color: selected ? AppColors.brand : AppColors.border,
-      ),
-      backgroundColor: AppColors.surface,
-      shape: const StadiumBorder(),
     );
   }
 }

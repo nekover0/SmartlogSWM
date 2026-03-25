@@ -46,7 +46,8 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
     final currentState = receiptState.valueOrNull;
     final authState = ref.watch(authControllerProvider);
     final roleName = authState.valueOrNull?.currentUser.role;
-    final canCreate = roleName != null &&
+    final canCreate =
+        roleName != null &&
         RoleGuard.canMutateModule(
           roleName: roleName,
           module: AppModule.inbound,
@@ -80,6 +81,7 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
     _syncSearchField(currentState);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4FAFF),
       appBar: AppBar(
         title: const Text('Phiếu nhập'),
         actions: [
@@ -93,12 +95,13 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(receiptListControllerProvider.notifier).refresh(),
+        onRefresh: () =>
+            ref.read(receiptListControllerProvider.notifier).refresh(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: AppSpacing.pagePadding,
           children: [
-            _ReceiptListHeaderCard(
+            _ReceiptListKpiHeader(
               state: currentState,
               canCreate: canCreate,
               onCreatePressed: canCreate
@@ -106,22 +109,9 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
                   : null,
             ),
             const SizedBox(height: AppSpacing.lg),
-            TextField(
-              key: const Key('receipt_search_field'),
+            _SearchFilterBar(
               controller: _searchController,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Tìm theo mã ASN, PO, B/L, biển số xe',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: currentState.searchQuery.trim().isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-              ),
+              query: currentState.searchQuery,
             ),
             const SizedBox(height: AppSpacing.md),
             ReceiptStatusChipBar(
@@ -139,8 +129,8 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
                   child: Text(
                     'Danh sách ưu tiên',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 if (currentState.hasActiveFilters)
@@ -178,14 +168,17 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
                               .read(receiptListControllerProvider.notifier)
                               .refresh();
                         },
-                  retryLabel:
-                      currentState.hasActiveFilters ? 'Xóa bộ lọc' : 'Tải lại',
+                  retryLabel: currentState.hasActiveFilters
+                      ? 'Xóa bộ lọc'
+                      : 'Tải lại',
                 ),
               )
             else
-              for (var index = 0;
-                  index < currentState.visibleItems.length;
-                  index++) ...[
+              for (
+                var index = 0;
+                index < currentState.visibleItems.length;
+                index++
+              ) ...[
                 ReceiptCard(
                   receipt: currentState.visibleItems[index],
                   onOpen: () {
@@ -226,8 +219,8 @@ class _ReceiptListPageState extends ConsumerState<ReceiptListPage> {
   }
 }
 
-class _ReceiptListHeaderCard extends StatelessWidget {
-  const _ReceiptListHeaderCard({
+class _ReceiptListKpiHeader extends StatelessWidget {
+  const _ReceiptListKpiHeader({
     required this.state,
     required this.canCreate,
     required this.onCreatePressed,
@@ -240,11 +233,13 @@ class _ReceiptListHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final waitingCount = state.countForStatus(ReceiptStatus.waitingForWeighing);
+    final completedCount = state.countForStatus(ReceiptStatus.completed);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(8),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -262,17 +257,25 @@ class _ReceiptListHeaderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Queue inbound',
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      'Cần xử lý ngay',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: AppColors.surface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      '$waitingCount',
+                      style: theme.textTheme.headlineLarge?.copyWith(
                         color: AppColors.surface,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Ưu tiên các phiếu đang chờ cân hoặc còn vướng chứng từ.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      'Phiếu chờ cân',
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.surface.withValues(alpha: 0.84),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -285,6 +288,7 @@ class _ReceiptListHeaderCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.surface,
                     foregroundColor: AppColors.brand,
+                    minimumSize: const Size(0, 38),
                   ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Tạo phiếu'),
@@ -292,22 +296,18 @@ class _ReceiptListHeaderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: [
-              Expanded(
-                child: _MetricTile(
-                  key: const Key('receipt_list_metric_active'),
-                  label: 'Đang mở',
-                  value: '${state.activeCount}',
-                ),
+              _HeaderStatPill(
+                label: 'Tổng hôm nay',
+                value: '${state.totalCount}',
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _MetricTile(
-                  key: const Key('receipt_list_metric_total'),
-                  label: 'Tổng phiếu',
-                  value: '${state.totalCount}',
-                ),
+              _HeaderStatPill(
+                label: 'Hoàn thành',
+                value: '$completedCount',
+                highlight: true,
               ),
             ],
           ),
@@ -319,7 +319,7 @@ class _ReceiptListHeaderCard extends StatelessWidget {
               _HeaderPill(label: '${state.activeCount} phiếu cần xử lý'),
               _HeaderPill(
                 label: state.selectedStatus == null
-                    ? 'Đang xem toàn bộ queue'
+                    ? 'Đang xem toàn bộ'
                     : 'Bộ lọc: ${_filterStatusLabel(state.selectedStatus!)}',
               ),
               if (state.searchQuery.trim().isNotEmpty)
@@ -332,42 +332,94 @@ class _ReceiptListHeaderCard extends StatelessWidget {
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({
-    super.key,
+class _SearchFilterBar extends StatelessWidget {
+  const _SearchFilterBar({required this.controller, required this.query});
+
+  final TextEditingController controller;
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('receipt_search_field'),
+            controller: controller,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Tìm PO, Biển số xe, Khách hàng...',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: query.trim().isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () {
+                        controller.clear();
+                      },
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.tune_rounded, size: 20),
+            tooltip: 'Bộ lọc nâng cao',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderStatPill extends StatelessWidget {
+  const _HeaderStatPill({
     required this.label,
     required this.value,
+    this.highlight = false,
   });
 
   final String label;
   final String value;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.surface,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.84),
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: highlight ? const Color(0xFFB8FFD2) : AppColors.surface,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -394,9 +446,9 @@ class _HeaderPill extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.surface,
-              fontWeight: FontWeight.w700,
-            ),
+          color: AppColors.surface,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

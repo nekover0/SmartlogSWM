@@ -6,11 +6,7 @@ import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
 class ReceiptCard extends StatelessWidget {
-  const ReceiptCard({
-    super.key,
-    required this.receipt,
-    this.onOpen,
-  });
+  const ReceiptCard({super.key, required this.receipt, this.onOpen});
 
   final ReceiptEntity receipt;
   final VoidCallback? onOpen;
@@ -19,242 +15,145 @@ class ReceiptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _statusColor(receipt.status);
     final theme = Theme.of(context);
-    final syncLabel = _syncLabel(receipt.syncState);
-    final syncColor = _syncColor(receipt.syncState);
-    final featuredAction = _featuredAction(receipt.availableActions);
+    final actionLabel =
+        _featuredAction(receipt.availableActions)?.label ?? 'Xem phiếu';
+    final statusLabel = _statusLabel(receipt.status);
+    final plate = receipt.vehicle.plateNumber?.trim();
+    final poOrBl = receipt.purchaseOrderNo?.trim().isNotEmpty == true
+        ? receipt.purchaseOrderNo!.trim()
+        : (receipt.billOfLadingNo?.trim().isNotEmpty == true
+              ? receipt.billOfLadingNo!.trim()
+              : '--');
 
     return Card(
       key: Key('receipt_card_${receipt.id}'),
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: statusColor.withValues(alpha: 0.35)),
+      ),
       child: InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: AppSpacing.cardPadding,
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          receipt.receiptNo,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              receipt.receiptNo,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: Text(
+                                statusLabel,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: statusColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        const SizedBox(height: 2),
                         Text(
                           receipt.owner.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _Pill(
-                    label: _statusLabel(receipt.status),
-                    color: statusColor,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  _MetaPill(
-                    icon: Icons.inventory_2_outlined,
-                    label: receipt.warehouse.code,
-                  ),
-                  if (_hasValue(receipt.purchaseOrderNo))
-                    _MetaPill(
-                      icon: Icons.receipt_long_outlined,
-                      label: receipt.purchaseOrderNo!.trim(),
-                    ),
-                  if (_hasValue(receipt.billOfLadingNo))
-                    _MetaPill(
-                      icon: Icons.local_shipping_outlined,
-                      label: receipt.billOfLadingNo!.trim(),
-                    ),
-                  if (_hasValue(receipt.vehicle.plateNumber))
-                    _MetaPill(
-                      icon: Icons.local_taxi_outlined,
-                      label: receipt.vehicle.plateNumber!.trim(),
-                    ),
-                  _Pill(label: syncLabel, color: syncColor),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
               Container(
-                padding: AppSpacing.compactPadding,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.sm,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: AppSpacing.controlRadius,
+                  color: const Color(0xFFF4FAFF),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Expanded(
+                      child: _WeightMetric(label: 'Số PO/BL', value: poOrBl),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
                       child: _WeightMetric(
-                        label: 'Dự kiến',
-                        value: '${_weightFormat.format(receipt.expectedWeightKg)} kg',
+                        label: 'Biển số xe',
+                        value: plate == null || plate.isEmpty ? '--' : plate,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: _WeightMetric(
-                        label: 'Thực nhận',
-                        value: '${_weightFormat.format(receipt.receivedWeightKg)} kg',
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _WeightMetric(
-                        label: 'Chênh lệch',
+                        label: 'Khối lượng DK',
                         value:
-                            '${receipt.varianceWeightKg > 0 ? '+' : ''}${_weightFormat.format(receipt.varianceWeightKg)} kg',
-                        valueColor: _varianceColor(receipt.varianceWeightKg),
+                            '${_weightFormat.format(receipt.expectedWeightKg)} KG',
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _WeightMetric(
+                        label: 'Thực tế',
+                        value: receipt.receivedWeightKg > 0
+                            ? '${_weightFormat.format(receipt.receivedWeightKg)} KG'
+                            : '--',
+                        valueColor: receipt.receivedWeightKg > 0
+                            ? AppColors.brand
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (featuredAction != null || _hasValue(receipt.note)) ...[
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (featuredAction != null)
-                      Expanded(
-                        child: Container(
-                          padding: AppSpacing.compactPadding,
-                          decoration: BoxDecoration(
-                            color: AppColors.brand.withValues(alpha: 0.08),
-                            borderRadius: AppSpacing.controlRadius,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.flash_on_rounded,
-                                color: AppColors.brand,
-                                size: 18,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Expanded(
-                                child: Text(
-                                  featuredAction.label,
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: AppColors.brand,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    if (featuredAction != null && _hasValue(receipt.note))
-                      const SizedBox(width: AppSpacing.sm),
-                    if (_hasValue(receipt.note))
-                      Expanded(
-                        child: Text(
-                          receipt.note!.trim(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
               const SizedBox(height: AppSpacing.md),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   key: Key('receipt_card_open_${receipt.id}'),
                   onPressed: onOpen,
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('Xem phiếu'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    foregroundColor: AppColors.surface,
+                    minimumSize: const Size.fromHeight(42),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(actionLabel.toUpperCase()),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MetaPill extends StatelessWidget {
-  const _MetaPill({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({
-    required this.label,
-    required this.color,
-  });
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -279,9 +178,9 @@ class _WeightMetric extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 2),
         Text(
@@ -297,8 +196,6 @@ class _WeightMetric extends StatelessWidget {
 }
 
 final NumberFormat _weightFormat = NumberFormat('#,##0.#');
-
-bool _hasValue(String? value) => value != null && value.trim().isNotEmpty;
 
 String _statusLabel(ReceiptStatus status) {
   return switch (status) {
@@ -324,33 +221,6 @@ Color _statusColor(ReceiptStatus status) {
     ReceiptStatus.error => AppColors.danger,
     ReceiptStatus.cancelled => AppColors.textSecondary,
   };
-}
-
-String _syncLabel(SyncState syncState) {
-  return switch (syncState) {
-    SyncState.synced => 'Đã sync',
-    SyncState.pending => 'Chờ sync',
-    SyncState.failed => 'Sync lỗi',
-  };
-}
-
-Color _syncColor(SyncState syncState) {
-  return switch (syncState) {
-    SyncState.synced => AppColors.success,
-    SyncState.pending => AppColors.warning,
-    SyncState.failed => AppColors.danger,
-  };
-}
-
-Color _varianceColor(double varianceWeightKg) {
-  final absoluteVariance = varianceWeightKg.abs();
-  if (absoluteVariance >= 100) {
-    return AppColors.danger;
-  }
-  if (absoluteVariance >= 20) {
-    return AppColors.warning;
-  }
-  return AppColors.textPrimary;
 }
 
 ActionCapability? _featuredAction(List<ActionCapability> actions) {
