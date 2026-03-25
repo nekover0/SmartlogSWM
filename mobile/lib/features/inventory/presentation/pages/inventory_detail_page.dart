@@ -1107,9 +1107,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionForeground = filled
-        ? AppColors.surface
-        : AppColors.textPrimary;
+    final actionForeground = filled ? AppColors.surface : AppColors.textPrimary;
 
     final colors = switch (tone) {
       _MetricTone.brand => (
@@ -1142,9 +1140,7 @@ class _ActionButton extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: actionForeground,
           ),

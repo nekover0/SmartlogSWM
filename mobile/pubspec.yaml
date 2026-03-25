@@ -74,6 +74,7 @@ flutter:
   assets:
     - assets/fixtures/auth/
     - assets/fixtures/inbound/
+    - assets/fixtures/outbound/
     - assets/fixtures/scan/
     - assets/fixtures/tasks/
     - asset/fixtures/

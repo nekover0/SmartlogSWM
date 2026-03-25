@@ -13,6 +13,7 @@ import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
+import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_list_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
@@ -144,14 +145,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.shipmentList,
         name: AppRouteNames.shipmentList,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.call_made_rounded,
-            frameLabel: '10. Danh sách Phiếu Xuất Kho (v3)',
-            routePath: AppRoutePaths.shipmentList,
-            title: 'Phiếu xuất',
-            description:
-                'Danh sách phiếu xuất map sang khung outbound của Figma.',
-          );
+          return const ShipmentListPage();
         },
       ),
       GoRoute(
