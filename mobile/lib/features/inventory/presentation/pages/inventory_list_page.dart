@@ -247,7 +247,8 @@ class _FilterRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _InventoryFilter.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+        separatorBuilder: (BuildContext context, int index) =>
+            const SizedBox(width: AppSpacing.xs),
         itemBuilder: (BuildContext context, int index) {
           final filter = _InventoryFilter.values[index];
           return _FilterChipButton(

@@ -9,13 +9,26 @@ import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_p
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/permissions_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_admin_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/user_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
+import 'package:smartlog_swm_mobile/features/inventory_control/presentation/pages/inventory_control_flow_page.dart';
+import 'package:smartlog_swm_mobile/features/inventory_control/presentation/pages/inventory_control_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_capture_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_inbox_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_link_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_review_page.dart';
+import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_create_page.dart';
+import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_list_page.dart';
+import 'package:smartlog_swm_mobile/features/reports/presentation/pages/reports_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
+import 'package:smartlog_swm_mobile/features/scan/presentation/pages/manual_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
@@ -84,14 +97,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.inventoryControl,
         name: AppRouteNames.inventoryControl,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.swap_horiz_rounded,
-            frameLabel: '13. Kiểm kê & Chuyển vị trí',
-            routePath: AppRoutePaths.inventoryControl,
-            title: 'Kiểm kê & chuyển vị trí',
-            description:
-                'Màn điều phối kiểm kê / chuyển vị trí giữ chỗ cho phase vận hành kho.',
-          );
+          return const InventoryControlPage();
         },
       ),
       GoRoute(
@@ -101,14 +107,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final mode =
               state.pathParameters[AppRoutePaths.inventoryControlModeParam] ??
               'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.tune_rounded,
-            frameLabel: '13. Kiểm kê & Chuyển vị trí',
-            routePath: AppRoutePaths.inventoryControlFlowPath(mode),
-            title: 'Luồng kiểm kê',
-            description:
-                'Biến thể luồng kiểm kê/chuyển vị trí theo mode sẽ được gắn sau khi hoàn thiện business rules.',
-          );
+          return InventoryControlFlowPage(mode: mode);
         },
       ),
       GoRoute(
@@ -152,14 +151,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.shipmentCreate,
         name: AppRouteNames.shipmentCreate,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.playlist_add_rounded,
-            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
-            routePath: AppRoutePaths.shipmentCreate,
-            title: 'Tạo phiếu xuất',
-            description:
-                'Flow tạo phiếu xuất sẽ được thay bằng chi tiết outbound thật ở phase sau.',
-          );
+          return const ShipmentCreatePage();
         },
       ),
       GoRoute(
@@ -168,14 +160,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final shipmentId =
               state.pathParameters[AppRoutePaths.shipmentIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.local_shipping_outlined,
-            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
-            routePath: AppRoutePaths.shipmentDetailPath(shipmentId),
-            title: 'Chi tiết phiếu xuất',
-            description:
-                'Chi tiết phiếu xuất giữ chỗ cho màn outbound refine flow.',
-          );
+          return ShipmentDetailPage(shipmentId: shipmentId);
         },
       ),
       GoRoute(
@@ -200,13 +185,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.scanManual,
         name: AppRouteNames.scanManual,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.keyboard_alt_outlined,
-            frameLabel: '03. Refined Quick Scan Screen',
-            routePath: AppRoutePaths.scanManual,
-            title: 'Nhập mã thủ công',
-            description:
-                'Biến thể nhập tay trong nhóm scan được giữ chỗ cho phase sau.',
+          final queryParameters = state.uri.queryParameters;
+          return ManualScanPage(
+            launchContext: ScanLaunchContext(
+              mode: _parseScanMode(queryParameters['mode']) ?? ScanMode.receive,
+              referenceId: queryParameters['referenceId'],
+              referenceNo: queryParameters['referenceNo'],
+              warehouseId: queryParameters['warehouseId'],
+              warehouseCode: queryParameters['warehouseCode'],
+              originRouteName: queryParameters['originRouteName'],
+              originRouteParams: _extractScanOriginRouteParams(queryParameters),
+            ),
           );
         },
       ),
@@ -214,28 +203,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.ocrInbox,
         name: AppRouteNames.ocrInbox,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.document_scanner_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrInbox,
-            title: 'OCR',
-            description:
-                'Hàng đợi OCR gắn với màn chụp và xử lý chứng từ trong Figma.',
-          );
+          return const OcrInboxPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.ocrCapture,
         name: AppRouteNames.ocrCapture,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.camera_alt_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrCapture,
-            title: 'Chụp OCR',
-            description:
-                'Màn chụp OCR sẽ được hiện thực sau khi chốt camera flow.',
-          );
+          return const OcrCapturePage();
         },
       ),
       GoRoute(
@@ -244,14 +219,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final ocrId =
               state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.fact_check_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrReviewPath(ocrId),
-            title: 'Review OCR',
-            description:
-                'Bước review OCR được giữ chỗ cho luồng xác nhận dữ liệu.',
-          );
+          return OcrReviewPage(ocrId: ocrId);
         },
       ),
       GoRoute(
@@ -260,70 +228,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final ocrId =
               state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.link_rounded,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrLinkPath(ocrId),
-            title: 'Link OCR',
-            description:
-                'Bước liên kết OCR với chứng từ sẽ được hoàn thiện ở phase sau.',
-          );
+          return OcrLinkPage(ocrId: ocrId);
         },
       ),
       GoRoute(
         path: AppRoutePaths.reports,
         name: AppRouteNames.reports,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.bar_chart_rounded,
-            frameLabel: '06. Real-time Reports Screen',
-            routePath: AppRoutePaths.reports,
-            title: 'Báo cáo',
-            description:
-                'Màn báo cáo real-time được giữ chỗ theo design hệ thống.',
-          );
+          return const ReportsPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.permissions,
         name: AppRouteNames.rbacProfile,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.admin_panel_settings_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.permissions,
-            title: 'Phân quyền',
-            description:
-                'Profile quyền và audit access sẽ được triển khai ở phase RBAC.',
-          );
+          return const PermissionsPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.userAdmin,
         name: AppRouteNames.userAdmin,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.people_alt_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.userAdmin,
-            title: 'Quản lý người dùng',
-            description:
-                'Trang admin users giữ chỗ cho luồng quản trị trong shell more.',
-          );
+          return const UserAdminPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.roleAdmin,
         name: AppRouteNames.roleAdmin,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.rule_folder_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.roleAdmin,
-            title: 'Quản lý vai trò',
-            description:
-                'Trang admin roles giữ chỗ cho cấu hình role matrix theo thiết kế.',
-          );
+          return const RoleAdminPage();
         },
       ),
     ],
