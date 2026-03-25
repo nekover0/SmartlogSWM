@@ -4,10 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_session_controller.dart';
-import 'package:smartlog_swm_mobile/features/scan/data/contracts/scan_session_contract.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/receive_scan_form_sheet.dart';
-import 'package:smartlog_swm_mobile/features/scan/presentation/widgets/scanner_overlay.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
@@ -68,22 +66,25 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
     _syncControllers(scanState);
 
     final showReceiveForm = _showReceiveForm(scanState.session.state);
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final keyboardVisible = keyboardInset > 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4FAFF),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Quét mã'),
         centerTitle: true,
         leading: IconButton(
           tooltip: 'Dong scan',
           onPressed: () => _closePage(context),
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
         actions: [
           IconButton(
             tooltip: 'Tuỳ chọn scan',
             onPressed: () {},
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(Icons.filter_list_rounded),
           ),
         ],
       ),
@@ -94,7 +95,9 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
               _ScanModeStrip(selectedMode: widget.launchContext.mode),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: showReceiveForm ? 310 : 0),
+                  padding: EdgeInsets.only(
+                    bottom: showReceiveForm ? (keyboardVisible ? 0 : 310) : 0,
+                  ),
                   child: _PreviewPanel(
                     state: scanState,
                     lookupController: _lookupController,
@@ -144,9 +147,7 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
+                padding: EdgeInsets.only(bottom: keyboardInset),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 760),
                   child: ReceiveScanFormSheet(
@@ -444,10 +445,7 @@ class _PreviewPanel extends StatelessWidget {
             ),
           ),
           if (cameraReady)
-            ScannerOverlay(
-              title: _overlayTitle(session.state),
-              subtitle: _overlaySubtitle(session),
-            )
+            const Center(child: _ScanFrame())
           else if (isPending)
             const Center(
               child: _PermissionState(
@@ -481,24 +479,31 @@ class _PreviewPanel extends StatelessWidget {
           Positioned(
             left: AppSpacing.md,
             right: AppSpacing.md,
-            top: 100,
+            top: 200,
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
+                  horizontal: AppSpacing.md,
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  'Đưa mã vào khung',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.surface,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.circle, size: 6, color: AppColors.warning),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'ĐƯA MÃ VÀO KHUNG',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.surface,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -506,88 +511,143 @@ class _PreviewPanel extends StatelessWidget {
           Positioned(
             left: AppSpacing.md,
             right: AppSpacing.md,
-            bottom: AppSpacing.lg,
-            child: Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.surface.withValues(alpha: 0.2),
-                    ),
+            bottom: AppSpacing.md,
+            child: Center(
+              child: ElevatedButton.icon(
+                key: const Key('barcode_scan_lookup_button'),
+                onPressed: cameraReady && !isWorking
+                    ? () {
+                        onLookup();
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.14),
+                  foregroundColor: AppColors.surface,
+                  elevation: 0,
+                  side: BorderSide(
+                    color: AppColors.surface.withValues(alpha: 0.2),
                   ),
-                  child: TextField(
-                    key: const Key('barcode_scan_lookup_field'),
-                    controller: lookupController,
-                    enabled: cameraReady && !isWorking,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) {
-                      onLookup();
-                    },
-                    style: const TextStyle(color: AppColors.surface),
-                    decoration: InputDecoration(
-                      hintText: 'RCV-240325-001 hoặc NOT-FOUND',
-                      hintStyle: TextStyle(
-                        color: AppColors.surface.withValues(alpha: 0.7),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.document_scanner_outlined,
-                        color: AppColors.surface.withValues(alpha: 0.8),
-                      ),
-                    ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.sm,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const Key('barcode_scan_not_found_button'),
-                        onPressed: cameraReady && !isWorking
-                            ? () {
-                                onLookupNotFound();
-                              }
-                            : null,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.surface,
-                          side: BorderSide(
-                            color: AppColors.surface.withValues(alpha: 0.28),
-                          ),
-                        ),
-                        icon: const Icon(Icons.keyboard_alt_rounded),
-                        label: const Text('Nhập SKU tay'),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    ElevatedButton(
-                      key: const Key('barcode_scan_lookup_button'),
-                      onPressed: cameraReady && !isWorking
-                          ? () {
-                              onLookup();
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.warning,
-                        foregroundColor: AppColors.textPrimary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
-                      ),
-                      child: const Text('Tra mã'),
-                    ),
-                  ],
+                icon: const Icon(Icons.keyboard_alt_rounded),
+                label: const Text('Nhập SKU tay'),
+              ),
+            ),
+          ),
+          Offstage(
+            offstage: true,
+            child: Column(
+              children: [
+                TextField(
+                  key: const Key('barcode_scan_lookup_field'),
+                  controller: lookupController,
+                  enabled: cameraReady && !isWorking,
+                ),
+                OutlinedButton(
+                  key: const Key('barcode_scan_not_found_button'),
+                  onPressed: cameraReady && !isWorking
+                      ? () {
+                          onLookupNotFound();
+                        }
+                      : null,
+                  child: const Text('not-found'),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ScanFrame extends StatelessWidget {
+  const _ScanFrame();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 256,
+      height: 256,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: AppColors.surface.withValues(alpha: 0.18),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const _CornerMarker(alignment: Alignment.topLeft),
+          const _CornerMarker(alignment: Alignment.topRight),
+          const _CornerMarker(alignment: Alignment.bottomLeft),
+          const _CornerMarker(alignment: Alignment.bottomRight),
+          Positioned.fill(
+            child: Center(
+              child: Icon(
+                Icons.qr_code_2_rounded,
+                size: 56,
+                color: AppColors.surface.withValues(alpha: 0.16),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -67,
+            right: -67,
+            top: 130,
+            child: Container(
+              height: 2,
+              decoration: BoxDecoration(
+                color: AppColors.warning,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.warning.withValues(alpha: 0.8),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CornerMarker extends StatelessWidget {
+  const _CornerMarker({required this.alignment});
+
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTop = alignment.y < 0;
+    final isLeft = alignment.x < 0;
+
+    return Align(
+      alignment: alignment,
+      child: SizedBox(
+        width: 32,
+        height: 32,
+        child: Stack(
+          children: [
+            Align(
+              alignment: isTop ? Alignment.topCenter : Alignment.bottomCenter,
+              child: Container(width: 16, height: 3, color: AppColors.warning),
+            ),
+            Align(
+              alignment: isLeft ? Alignment.centerLeft : Alignment.centerRight,
+              child: Container(width: 3, height: 16, color: AppColors.warning),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -696,31 +756,6 @@ class _StatusBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-String _overlayTitle(ScanSessionState state) {
-  return switch (state) {
-    ScanSessionState.lookupSuccess => 'Ma hop le',
-    ScanSessionState.formReady => 'Form receive san sang',
-    ScanSessionState.submitting => 'Dang chot phien scan',
-    ScanSessionState.submitSuccess => 'Nhap kho thanh cong',
-    ScanSessionState.lookupNotFound => 'Khong tim thay ma',
-    _ => 'Dua ma vao khung',
-  };
-}
-
-String _overlaySubtitle(ScanSessionEntity session) {
-  return switch (session.state) {
-    ScanSessionState.formReady ||
-    ScanSessionState.submitting ||
-    ScanSessionState.submitSuccess =>
-      'SKU ${session.resolvedItemCode ?? 'unknown'} dang cho xac nhan so luong va vi tri.',
-    ScanSessionState.lookupSuccess =>
-      'Lookup hoan tat, chuan bi mo bottom sheet nhap kho.',
-    ScanSessionState.lookupNotFound =>
-      session.errorMessage ?? 'Khong co du lieu fixture khop voi ma vua nhap.',
-    _ => 'Ban demo nay dung text input de gia lap barcode/QR receive.',
-  };
 }
 
 void _syncControllerValue(TextEditingController controller, String value) {

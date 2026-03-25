@@ -47,236 +47,404 @@ class ReceiveScanFormSheet extends StatelessWidget {
       color: AppColors.surface,
       elevation: 24,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.sm,
-          AppSpacing.xl,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 44,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(999),
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxHeight = constraints.maxHeight.clamp(320.0, 560.0);
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.sm,
+                AppSpacing.xl,
+                AppSpacing.xl,
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Mã hàng: ${session.lookupCode ?? 'IND-992-BX'}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Hydraulic Valve X-40',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: AppColors.brand,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'SKU: ${session.resolvedItemCode ?? 'SKU-MILK-18L'}',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: AppColors.brand,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: AppSpacing.xxs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.brand.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Text(
-                    'VALID',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.brand,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: AppColors.border.withValues(alpha: 0.6),
-                  ),
-                  bottom: BorderSide(
-                    color: AppColors.border.withValues(alpha: 0.6),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _InfoLine(
-                      label: 'Vị trí hiện tại',
-                      value: session.resolvedLocationCode ?? 'A-12-04',
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  const Expanded(
-                    child: _InfoLine(label: 'Tồn kho', value: '124 PCS'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Số lượng',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      TextField(
-                        key: const Key('receive_form_quantity_field'),
-                        controller: quantityController,
-                        enabled: !isSubmitting,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(hintText: '12'),
-                        onChanged: onQuantityChanged,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vị trí đích',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      TextField(
-                        key: const Key('receive_form_location_field'),
-                        controller: locationController,
-                        enabled: !isSubmitting,
-                        decoration: const InputDecoration(hintText: 'B-05-11'),
-                        onChanged: onLocationChanged,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (hasError) ...[
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.danger.withValues(alpha: 0.08),
-                  borderRadius: AppSpacing.controlRadius,
-                  border: Border.all(
-                    color: AppColors.danger.withValues(alpha: 0.16),
-                  ),
-                ),
-                child: Text(
-                  session.errorMessage!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.danger,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-            Offstage(
-              offstage: true,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    key: const Key('receive_form_reference_field'),
-                    controller: referenceController,
-                    onChanged: onReferenceChanged,
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
                   ),
-                  TextField(
-                    key: const Key('receive_form_warehouse_field'),
-                    controller: warehouseController,
-                    onChanged: onWarehouseChanged,
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mã hàng: ${session.lookupCode ?? 'IND-992-BX'}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Hydraulic Valve X-40',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: AppColors.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'SKU: ${session.resolvedItemCode ?? 'SKU-MILK-18L'}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: AppColors.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.xxs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.brand.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Text(
+                          'VALID',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.brand,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: AppColors.border.withValues(alpha: 0.6),
+                        ),
+                        bottom: BorderSide(
+                          color: AppColors.border.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _InfoLine(
+                            label: 'Vị trí hiện tại',
+                            value: session.resolvedLocationCode ?? 'A-12-04',
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(
+                          child: _InfoLine(label: 'Tồn kho', value: '124 PCS'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Số lượng',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE7F6FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      key: const Key(
+                                        'receive_form_quantity_field',
+                                      ),
+                                      controller: quantityController,
+                                      enabled: !isSubmitting,
+                                      textAlignVertical:
+                                          TextAlignVertical.center,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        disabledBorder: InputBorder.none,
+                                        errorBorder: InputBorder.none,
+                                        focusedErrorBorder: InputBorder.none,
+                                        isDense: true,
+                                        filled: false,
+                                        contentPadding: EdgeInsets.zero,
+                                        hintText: '12',
+                                      ),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            color: AppColors.brand,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      onChanged: onQuantityChanged,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  _StepperButton(
+                                    icon: Icons.remove_rounded,
+                                    enabled: !isSubmitting,
+                                    onTap: () {
+                                      _updateQuantityBy(quantityController, -1);
+                                      onQuantityChanged(
+                                        quantityController.text,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  _StepperButton(
+                                    icon: Icons.add_rounded,
+                                    enabled: !isSubmitting,
+                                    onTap: () {
+                                      _updateQuantityBy(quantityController, 1);
+                                      onQuantityChanged(
+                                        quantityController.text,
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Vị trí đích',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE7F6FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                              ),
+                              child: TextField(
+                                key: const Key('receive_form_location_field'),
+                                controller: locationController,
+                                enabled: !isSubmitting,
+                                minLines: 1,
+                                maxLines: 1,
+                                textAlignVertical: TextAlignVertical.center,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  focusedErrorBorder: InputBorder.none,
+                                  isDense: false,
+                                  filled: false,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  hintText: 'B-05-11',
+                                ),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: AppColors.brand,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                onChanged: onLocationChanged,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (hasError) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withValues(alpha: 0.08),
+                        borderRadius: AppSpacing.controlRadius,
+                        border: Border.all(
+                          color: AppColors.danger.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      child: Text(
+                        session.errorMessage!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  Offstage(
+                    offstage: true,
+                    child: Column(
+                      children: [
+                        TextField(
+                          key: const Key('receive_form_reference_field'),
+                          controller: referenceController,
+                          onChanged: onReferenceChanged,
+                        ),
+                        TextField(
+                          key: const Key('receive_form_warehouse_field'),
+                          controller: warehouseController,
+                          onChanged: onWarehouseChanged,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          key: const Key('receive_form_submit_button'),
+                          onPressed: isSubmitting ? null : onSubmit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.brand,
+                            foregroundColor: AppColors.surface,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: isSubmitting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.check_circle_rounded),
+                          label: Text(
+                            isSubmitting ? 'Đang gửi...' : 'XÁC NHẬN',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const Key('receive_form_restart_button'),
+                          onPressed: isSubmitting ? null : onRestart,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.brand,
+                            side: BorderSide(
+                              color: AppColors.border.withValues(alpha: 0.8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                          label: const Text('QUÉT TIẾP'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const Key('receive_form_restart_button'),
-                    onPressed: isSubmitting ? null : onRestart,
-                    icon: const Icon(Icons.qr_code_scanner_rounded),
-                    label: const Text('Quét tiếp'),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    key: const Key('receive_form_submit_button'),
-                    onPressed: isSubmitting ? null : onSubmit,
-                    icon: isSubmitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check_rounded),
-                    label: Text(isSubmitting ? 'Đang gửi...' : 'XÁC NHẬN'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(icon, size: 14, color: AppColors.textSecondary),
+      ),
+    );
+  }
+}
+
+void _updateQuantityBy(TextEditingController controller, int delta) {
+  final current = double.tryParse(controller.text.trim()) ?? 0;
+  final next = (current + delta).clamp(0, 999999);
+  if (next % 1 == 0) {
+    controller.text = next.toInt().toString();
+    return;
+  }
+
+  controller.text = next.toString();
 }
 
 class _InfoLine extends StatelessWidget {
