@@ -13,6 +13,8 @@ import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
+import 'package:smartlog_swm_mobile/features/inventory_control/presentation/pages/inventory_control_flow_page.dart';
+import 'package:smartlog_swm_mobile/features/inventory_control/presentation/pages/inventory_control_page.dart';
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_capture_page.dart';
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_inbox_page.dart';
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_link_page.dart';
@@ -89,14 +91,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.inventoryControl,
         name: AppRouteNames.inventoryControl,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.swap_horiz_rounded,
-            frameLabel: '13. Kiểm kê & Chuyển vị trí',
-            routePath: AppRoutePaths.inventoryControl,
-            title: 'Kiểm kê & chuyển vị trí',
-            description:
-                'Màn điều phối kiểm kê / chuyển vị trí giữ chỗ cho phase vận hành kho.',
-          );
+          return const InventoryControlPage();
         },
       ),
       GoRoute(
@@ -106,14 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final mode =
               state.pathParameters[AppRoutePaths.inventoryControlModeParam] ??
               'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.tune_rounded,
-            frameLabel: '13. Kiểm kê & Chuyển vị trí',
-            routePath: AppRoutePaths.inventoryControlFlowPath(mode),
-            title: 'Luồng kiểm kê',
-            description:
-                'Biến thể luồng kiểm kê/chuyển vị trí theo mode sẽ được gắn sau khi hoàn thiện business rules.',
-          );
+          return InventoryControlFlowPage(mode: mode);
         },
       ),
       GoRoute(
