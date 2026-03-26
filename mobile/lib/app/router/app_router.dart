@@ -23,6 +23,7 @@ import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipmen
 import 'package:smartlog_swm_mobile/features/reports/presentation/pages/reports_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
+import 'package:smartlog_swm_mobile/features/scan/presentation/pages/manual_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
@@ -193,13 +194,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.scanManual,
         name: AppRouteNames.scanManual,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.keyboard_alt_outlined,
-            frameLabel: '03. Refined Quick Scan Screen',
-            routePath: AppRoutePaths.scanManual,
-            title: 'Nhập mã thủ công',
-            description:
-                'Biến thể nhập tay trong nhóm scan được giữ chỗ cho phase sau.',
+          final queryParameters = state.uri.queryParameters;
+          return ManualScanPage(
+            launchContext: ScanLaunchContext(
+              mode: _parseScanMode(queryParameters['mode']) ?? ScanMode.receive,
+              referenceId: queryParameters['referenceId'],
+              referenceNo: queryParameters['referenceNo'],
+              warehouseId: queryParameters['warehouseId'],
+              warehouseCode: queryParameters['warehouseCode'],
+              originRouteName: queryParameters['originRouteName'],
+              originRouteParams: _extractScanOriginRouteParams(queryParameters),
+            ),
           );
         },
       ),
