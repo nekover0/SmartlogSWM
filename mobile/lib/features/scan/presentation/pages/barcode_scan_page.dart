@@ -480,7 +480,7 @@ class _PreviewPanel extends StatelessWidget {
     final isWorking = session.state == ScanSessionState.submitting;
     final hasRuntimeError = cameraRuntimeError != null;
     final manualFallbackEnabled =
-      !isWorking && (cameraReady || isDenied || hasRuntimeError);
+        !isWorking && (cameraReady || isDenied || hasRuntimeError);
 
     return Container(
       key: const Key('barcode_scan_preview_panel'),

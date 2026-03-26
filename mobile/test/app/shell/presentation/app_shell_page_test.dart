@@ -30,10 +30,7 @@ void main() {
 
     return UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(
-        routerConfig: router,
-        theme: AppTheme.light(),
-      ),
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
   }
 

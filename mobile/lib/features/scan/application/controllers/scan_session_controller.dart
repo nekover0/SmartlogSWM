@@ -8,15 +8,17 @@ import 'package:smartlog_swm_mobile/features/scan/domain/repositories/scan_repos
 import 'package:smartlog_swm_mobile/features/scan/domain/services/scan_code_stream_service.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
-final scanSessionControllerProvider = NotifierProviderFamily<
-  ScanSessionController,
-  ScanSessionControllerState,
-  ScanLaunchContext
->(ScanSessionController.new);
+final scanSessionControllerProvider =
+    NotifierProviderFamily<
+      ScanSessionController,
+      ScanSessionControllerState,
+      ScanLaunchContext
+    >(ScanSessionController.new);
 
 class ScanSessionController
     extends FamilyNotifier<ScanSessionControllerState, ScanLaunchContext> {
-  PermissionService get _permissionService => ref.read(permissionServiceProvider);
+  PermissionService get _permissionService =>
+      ref.read(permissionServiceProvider);
   ScanRepository get _scanRepository => ref.read(scanRepositoryProvider);
   bool _isLookupInFlight = false;
   String? _lastDetectedCodeKey;
@@ -341,7 +343,8 @@ class ScanSessionController
       state: state ?? session.state,
       cameraGranted: cameraGranted ?? session.cameraGranted,
       lookupCode: lookupCode ?? session.lookupCode,
-      resolvedLocationCode: resolvedLocationCode ?? session.resolvedLocationCode,
+      resolvedLocationCode:
+          resolvedLocationCode ?? session.resolvedLocationCode,
       referenceId: referenceId ?? session.referenceId,
       warehouseId: warehouseId ?? session.warehouseId,
       quantity: quantity ?? session.quantity,

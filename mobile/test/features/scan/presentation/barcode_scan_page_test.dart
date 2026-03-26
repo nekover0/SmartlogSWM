@@ -37,7 +37,8 @@ void main() {
       warehouseId: 'warehouse-001',
     ),
   }) {
-    final scannerService = fakeScanCodeStreamService ?? FakeScanCodeStreamService();
+    final scannerService =
+        fakeScanCodeStreamService ?? FakeScanCodeStreamService();
 
     return ProviderScope(
       overrides: [
@@ -66,7 +67,10 @@ void main() {
     );
     await settleUi(tester);
 
-    expect(find.byKey(const Key('barcode_scan_permission_denied')), findsOneWidget);
+    expect(
+      find.byKey(const Key('barcode_scan_permission_denied')),
+      findsOneWidget,
+    );
     expect(find.text('Cấp quyền lại'), findsOneWidget);
     final fallbackButton = tester.widget<ElevatedButton>(
       find.byKey(const Key('barcode_scan_lookup_button')),
@@ -205,14 +209,19 @@ void main() {
     );
     await settleUi(tester);
 
-    expect(find.byKey(const Key('barcode_scan_permission_denied')), findsOneWidget);
+    expect(
+      find.byKey(const Key('barcode_scan_permission_denied')),
+      findsOneWidget,
+    );
 
     permissionService.requestStatus = CameraPermissionStatus.granted;
     await tester.tap(find.text('Cấp quyền lại'));
     await settleUi(tester);
 
     final nextState = container.read(
-      scanSessionControllerProvider(const ScanLaunchContext(mode: ScanMode.receive)),
+      scanSessionControllerProvider(
+        const ScanLaunchContext(mode: ScanMode.receive),
+      ),
     );
     expect(nextState.session.state, ScanSessionState.scanning);
     expect(nextState.session.cameraGranted, isTrue);
@@ -264,10 +273,12 @@ void main() {
       scanSessionControllerProvider(launchContext),
     );
     expect(recoveredState.session.state, ScanSessionState.scanning);
-    expect(find.byKey(const Key('barcode_scan_camera_preview')), findsOneWidget);
+    expect(
+      find.byKey(const Key('barcode_scan_camera_preview')),
+      findsOneWidget,
+    );
   });
 }
-
 
 class _MutablePermissionService implements PermissionService {
   _MutablePermissionService({

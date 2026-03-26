@@ -193,23 +193,26 @@ void main() {
       expect(repository.lookupCodes.first, 'rcv-dup-001');
     });
 
-    test('restartScanning clears dedupe memory for next identical scan', () async {
-      final repository = _CountingScanRepository();
-      final container = createContainer(scanRepository: repository);
-      addTearDown(container.dispose);
+    test(
+      'restartScanning clears dedupe memory for next identical scan',
+      () async {
+        final repository = _CountingScanRepository();
+        final container = createContainer(scanRepository: repository);
+        addTearDown(container.dispose);
 
-      const context = ScanLaunchContext(mode: ScanMode.receive);
-      final controller = container.read(
-        scanSessionControllerProvider(context).notifier,
-      );
+        const context = ScanLaunchContext(mode: ScanMode.receive);
+        final controller = container.read(
+          scanSessionControllerProvider(context).notifier,
+        );
 
-      await controller.requestCameraAccess();
-      await controller.onCodeDetected('RCV-RESET-001');
-      await controller.restartScanning();
-      await controller.onCodeDetected('RCV-RESET-001');
+        await controller.requestCameraAccess();
+        await controller.onCodeDetected('RCV-RESET-001');
+        await controller.restartScanning();
+        await controller.onCodeDetected('RCV-RESET-001');
 
-      expect(repository.lookupCodes.length, 2);
-    });
+        expect(repository.lookupCodes.length, 2);
+      },
+    );
   });
 }
 
