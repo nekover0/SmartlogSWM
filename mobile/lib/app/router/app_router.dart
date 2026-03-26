@@ -14,6 +14,7 @@ import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_list_page.dart';
+import 'package:smartlog_swm_mobile/features/reports/presentation/pages/reports_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
@@ -274,14 +275,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.reports,
         name: AppRouteNames.reports,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.bar_chart_rounded,
-            frameLabel: '06. Real-time Reports Screen',
-            routePath: AppRoutePaths.reports,
-            title: 'Báo cáo',
-            description:
-                'Màn báo cáo real-time được giữ chỗ theo design hệ thống.',
-          );
+          return const ReportsPage();
         },
       ),
       GoRoute(

@@ -468,7 +468,7 @@ class _OwnerWarehouseFilterRow extends ConsumerWidget {
         Expanded(
           child: DropdownButtonFormField<String?>(
             key: const Key('shipment_warehouse_filter'),
-            value: state.selectedWarehouseId,
+            initialValue: state.selectedWarehouseId,
             items: [
               const DropdownMenuItem<String?>(
                 value: null,
@@ -489,7 +489,7 @@ class _OwnerWarehouseFilterRow extends ConsumerWidget {
         Expanded(
           child: DropdownButtonFormField<String?>(
             key: const Key('shipment_owner_filter'),
-            value: state.selectedOwnerId,
+            initialValue: state.selectedOwnerId,
             items: [
               const DropdownMenuItem<String?>(
                 value: null,

@@ -903,7 +903,7 @@ class _SimpleSection extends StatelessWidget {
                   ),
                 ),
               ),
-              if (trailing != null) trailing!,
+              ..._asWidgetList(trailing),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -916,6 +916,14 @@ class _SimpleSection extends StatelessWidget {
 
 final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
 final NumberFormat _weightFormat = NumberFormat('#,##0.##');
+
+List<Widget> _asWidgetList(Widget? widget) {
+  if (widget == null) {
+    return const <Widget>[];
+  }
+
+  return <Widget>[widget];
+}
 
 String _valueOrFallback(String? value) {
   if (!_hasValue(value)) {
