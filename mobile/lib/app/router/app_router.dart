@@ -9,6 +9,9 @@ import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_p
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/permissions_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_admin_page.dart';
+import 'package:smartlog_swm_mobile/features/account/presentation/pages/user_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
@@ -251,42 +254,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.permissions,
         name: AppRouteNames.rbacProfile,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.admin_panel_settings_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.permissions,
-            title: 'Phân quyền',
-            description:
-                'Profile quyền và audit access sẽ được triển khai ở phase RBAC.',
-          );
+          return const PermissionsPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.userAdmin,
         name: AppRouteNames.userAdmin,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.people_alt_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.userAdmin,
-            title: 'Quản lý người dùng',
-            description:
-                'Trang admin users giữ chỗ cho luồng quản trị trong shell more.',
-          );
+          return const UserAdminPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.roleAdmin,
         name: AppRouteNames.roleAdmin,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.rule_folder_outlined,
-            frameLabel: '07. Refined Account & RBAC Screen',
-            routePath: AppRoutePaths.roleAdmin,
-            title: 'Quản lý vai trò',
-            description:
-                'Trang admin roles giữ chỗ cho cấu hình role matrix theo thiết kế.',
-          );
+          return const RoleAdminPage();
         },
       ),
     ],

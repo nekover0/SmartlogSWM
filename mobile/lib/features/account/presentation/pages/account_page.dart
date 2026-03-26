@@ -88,6 +88,13 @@ class AccountPage extends ConsumerWidget {
             device: 'Zebra TC21 (Android 10)',
           ),
           const SizedBox(height: AppSpacing.lg),
+          FilledButton.tonalIcon(
+            key: const Key('account_permission_profile_button'),
+            onPressed: () => context.go(AppRoutePaths.permissions),
+            icon: const Icon(Icons.rule_outlined),
+            label: const Text('HỒ SƠ PHÂN QUYỀN'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           FilledButton.icon(
             key: const Key('account_manage_users_roles_button'),
             onPressed: adminAccess.canView
