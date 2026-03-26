@@ -39,6 +39,11 @@ void main() {
         find.byKey(const Key('account_activity_log_card')),
         findsOneWidget,
       );
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('account_manage_users_roles_button')),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
       expect(
         find.byKey(const Key('account_manage_users_roles_button')),
         findsOneWidget,

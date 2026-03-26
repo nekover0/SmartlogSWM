@@ -108,7 +108,7 @@ class _ReceiptDetailPageState extends ConsumerState<ReceiptDetailPage> {
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: 'Quay lại',
         ),
-        title: const Text('Inbound Detail'),
+        title: const Text('Chi tiết phiếu nhập'),
         actions: [
           IconButton(
             onPressed: () {
@@ -299,6 +299,9 @@ class _ManifestHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusLabel = _statusLabel(receipt.status);
+    final statusColor = _statusColor(receipt.status);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -357,16 +360,16 @@ class _ManifestHeader extends StatelessWidget {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.15),
+                  color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.info.withValues(alpha: 0.3),
+                    color: statusColor.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
-                  'Đang thực hiện',
+                  statusLabel,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.brand,
+                    color: statusColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -959,4 +962,30 @@ double _variancePercent(ReceiptEntity receipt) {
   }
 
   return (receipt.varianceWeightKg / baseline) * 100;
+}
+
+String _statusLabel(ReceiptStatus status) {
+  return switch (status) {
+    ReceiptStatus.draft => 'Tạo mới',
+    ReceiptStatus.confirmed => 'Đã xác nhận',
+    ReceiptStatus.waitingForWeighing => 'Chờ cân',
+    ReceiptStatus.weighing1 => 'Đang cân 1',
+    ReceiptStatus.weighing2 => 'Đang cân 2',
+    ReceiptStatus.completed => 'Hoàn thành',
+    ReceiptStatus.error => 'Lỗi',
+    ReceiptStatus.cancelled => 'Đã hủy',
+  };
+}
+
+Color _statusColor(ReceiptStatus status) {
+  return switch (status) {
+    ReceiptStatus.draft => AppColors.textSecondary,
+    ReceiptStatus.confirmed => AppColors.info,
+    ReceiptStatus.waitingForWeighing => AppColors.warning,
+    ReceiptStatus.weighing1 => AppColors.brandAccent,
+    ReceiptStatus.weighing2 => AppColors.brand,
+    ReceiptStatus.completed => AppColors.success,
+    ReceiptStatus.error => AppColors.danger,
+    ReceiptStatus.cancelled => AppColors.textSecondary,
+  };
 }
