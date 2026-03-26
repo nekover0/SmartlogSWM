@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/core/permissions/permission_service.dart';
 import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_session_controller.dart';
+import 'package:smartlog_swm_mobile/features/scan/data/services/fake_scan_code_stream_service.dart';
+import 'package:smartlog_swm_mobile/features/scan/data/services/mobile_scanner_code_stream_service.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
@@ -27,15 +29,19 @@ void main() {
 
   Widget buildDirectPage({
     required PermissionService permissionService,
+    FakeScanCodeStreamService? fakeScanCodeStreamService,
     ScanLaunchContext launchContext = const ScanLaunchContext(
       mode: ScanMode.receive,
       referenceId: 'rcp-20260323-001',
       warehouseId: 'warehouse-001',
     ),
   }) {
+    final scannerService = fakeScanCodeStreamService ?? FakeScanCodeStreamService();
+
     return ProviderScope(
       overrides: [
         permissionServiceProvider.overrideWithValue(permissionService),
+        scanCodeStreamServiceOverrideProvider.overrideWithValue(scannerService),
       ],
       child: MaterialApp(
         theme: AppTheme.light(),
@@ -111,6 +117,9 @@ void main() {
             currentStatus: CameraPermissionStatus.granted,
           ),
         ),
+        scanCodeStreamServiceOverrideProvider.overrideWithValue(
+          FakeScanCodeStreamService(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -161,4 +170,5 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+
 }
