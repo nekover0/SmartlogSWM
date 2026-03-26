@@ -22,6 +22,8 @@ import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_capture_
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_inbox_page.dart';
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_link_page.dart';
 import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_review_page.dart';
+import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_create_page.dart';
+import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_list_page.dart';
 import 'package:smartlog_swm_mobile/features/reports/presentation/pages/reports_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
@@ -149,14 +151,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.shipmentCreate,
         name: AppRouteNames.shipmentCreate,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.playlist_add_rounded,
-            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
-            routePath: AppRoutePaths.shipmentCreate,
-            title: 'Tạo phiếu xuất',
-            description:
-                'Flow tạo phiếu xuất sẽ được thay bằng chi tiết outbound thật ở phase sau.',
-          );
+          return const ShipmentCreatePage();
         },
       ),
       GoRoute(
@@ -165,14 +160,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final shipmentId =
               state.pathParameters[AppRoutePaths.shipmentIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.local_shipping_outlined,
-            frameLabel: '11. Chi tiết Phiếu Xuất Kho',
-            routePath: AppRoutePaths.shipmentDetailPath(shipmentId),
-            title: 'Chi tiết phiếu xuất',
-            description:
-                'Chi tiết phiếu xuất giữ chỗ cho màn outbound refine flow.',
-          );
+          return ShipmentDetailPage(shipmentId: shipmentId);
         },
       ),
       GoRoute(
