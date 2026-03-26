@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -112,6 +114,15 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
                             ).notifier,
                           )
                           .requestCameraAccess();
+                    },
+                    onCodeDetected: (code) {
+                      return ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .onCodeDetected(code);
                     },
                   ),
                 ),
@@ -410,6 +421,7 @@ class _PreviewPanel extends StatelessWidget {
     required this.onLookup,
     required this.onLookupNotFound,
     required this.onRequestPermission,
+    required this.onCodeDetected,
   });
 
   final ScanSessionControllerState state;
@@ -417,6 +429,7 @@ class _PreviewPanel extends StatelessWidget {
   final Future<void> Function() onLookup;
   final Future<void> Function() onLookupNotFound;
   final VoidCallback onRequestPermission;
+  final Future<void> Function(String code) onCodeDetected;
 
   @override
   Widget build(BuildContext context) {
@@ -446,9 +459,10 @@ class _PreviewPanel extends StatelessWidget {
             ),
           ),
           if (cameraReady)
-            const Positioned.fill(
+            Positioned.fill(
               child: _ScannerWidgetAdapter(
                 key: Key('barcode_scan_camera_preview'),
+                onCodeDetected: onCodeDetected,
               ),
             )
           else if (isPending)
@@ -571,7 +585,12 @@ class _PreviewPanel extends StatelessWidget {
 }
 
 class _ScannerWidgetAdapter extends StatelessWidget {
-  const _ScannerWidgetAdapter({super.key});
+  const _ScannerWidgetAdapter({
+    super.key,
+    required this.onCodeDetected,
+  });
+
+  final Future<void> Function(String code) onCodeDetected;
 
   @override
   Widget build(BuildContext context) {
@@ -589,6 +608,17 @@ class _ScannerWidgetAdapter extends StatelessWidget {
 
     return MobileScanner(
       fit: BoxFit.cover,
+      onDetect: (capture) {
+        for (final barcode in capture.barcodes) {
+          final rawValue = barcode.rawValue?.trim();
+          if (rawValue == null || rawValue.isEmpty) {
+            continue;
+          }
+
+          unawaited(onCodeDetected(rawValue));
+          break;
+        }
+      },
       placeholderBuilder: (context, child) {
         return const DecoratedBox(
           decoration: BoxDecoration(color: Color(0xFF031428)),
