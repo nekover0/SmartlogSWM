@@ -1,0 +1,143 @@
+{
+  "records": [
+    {
+      "id": "ocr-20260326-001",
+      "direction": "inbound",
+      "status": "review_required",
+      "confidence_score": 0.67,
+      "confidence_level": "low",
+      "extracted_fields": {
+        "document_no": "RCP-20260326-001",
+        "vehicle_plate": "51D-123.4?",
+        "owner_code": "OWN-01",
+        "owner_name": "VinFast Logistics",
+        "item_code": "SKU-COIL-01",
+        "item_name": "Steel Coil 5T",
+        "gross_weight_kg": 12450,
+        "net_weight_kg": 11820
+      },
+      "review_flags": [
+        {
+          "field_name": "vehiclePlate",
+          "raw_value": "51D-123.4?",
+          "confidence_score": 0.62,
+          "level": "low",
+          "required_review": true
+        }
+      ],
+      "source_image_url": "fixture://ocr/inbound-001.jpg",
+      "linked_target_type": "none",
+      "captured_at": "2026-03-26T01:15:00.000Z",
+      "processed_at": "2026-03-26T01:16:08.000Z",
+      "linked_at": null,
+      "sync_state": "pending"
+    },
+    {
+      "id": "ocr-20260326-002",
+      "direction": "outbound",
+      "status": "extracted",
+      "confidence_score": 0.81,
+      "confidence_level": "medium",
+      "extracted_fields": {
+        "document_no": "SHP-20260326-011",
+        "vehicle_plate": "50H-998.12",
+        "owner_code": "OWN-05",
+        "owner_name": "Sabeco",
+        "item_code": "SKU-BEER-24",
+        "item_name": "Beer Crate 24",
+        "gross_weight_kg": 8840,
+        "net_weight_kg": 8230
+      },
+      "review_flags": [],
+      "source_image_url": "fixture://ocr/outbound-002.jpg",
+      "linked_target_type": "none",
+      "captured_at": "2026-03-26T01:05:00.000Z",
+      "processed_at": "2026-03-26T01:06:10.000Z",
+      "linked_at": null,
+      "sync_state": "synced"
+    },
+    {
+      "id": "ocr-20260326-003",
+      "direction": "inbound",
+      "status": "confirmed",
+      "confidence_score": 0.9,
+      "confidence_level": "high",
+      "extracted_fields": {
+        "document_no": "RCP-20260326-003",
+        "vehicle_plate": "60C-445.76",
+        "owner_code": "OWN-07",
+        "owner_name": "TH True Milk",
+        "item_code": "SKU-MILK-12",
+        "item_name": "Milk Box 12",
+        "gross_weight_kg": 10210,
+        "net_weight_kg": 9760
+      },
+      "review_flags": [],
+      "source_image_url": "fixture://ocr/inbound-003.jpg",
+      "linked_target_type": "none",
+      "captured_at": "2026-03-26T00:48:00.000Z",
+      "processed_at": "2026-03-26T00:49:04.000Z",
+      "linked_at": null,
+      "sync_state": "synced"
+    },
+    {
+      "id": "ocr-20260325-090",
+      "direction": "outbound",
+      "status": "linked",
+      "confidence_score": 0.93,
+      "confidence_level": "high",
+      "extracted_fields": {
+        "document_no": "SHP-20260325-090",
+        "vehicle_plate": "51H-112.89",
+        "owner_code": "OWN-03",
+        "owner_name": "THACO",
+        "item_code": "SKU-AUTO-02",
+        "item_name": "Auto Parts Kit",
+        "gross_weight_kg": 6420,
+        "net_weight_kg": 6015
+      },
+      "review_flags": [],
+      "source_image_url": "fixture://ocr/outbound-090.jpg",
+      "linked_target_type": "shipment",
+      "linked_target_id": "shp-20260325-090",
+      "linked_target_no": "SHP-20260325-090",
+      "captured_at": "2026-03-25T12:22:00.000Z",
+      "processed_at": "2026-03-25T12:23:08.000Z",
+      "linked_at": "2026-03-25T12:24:02.000Z",
+      "sync_state": "synced"
+    },
+    {
+      "id": "ocr-20260325-ERR",
+      "direction": "inbound",
+      "status": "failed",
+      "confidence_score": 0.41,
+      "confidence_level": "low",
+      "extracted_fields": {
+        "document_no": null,
+        "vehicle_plate": null,
+        "owner_code": null,
+        "owner_name": null,
+        "item_code": null,
+        "item_name": null,
+        "gross_weight_kg": null,
+        "net_weight_kg": null
+      },
+      "review_flags": [
+        {
+          "field_name": "documentNo",
+          "raw_value": null,
+          "confidence_score": 0.33,
+          "level": "low",
+          "required_review": true
+        }
+      ],
+      "source_image_url": "fixture://ocr/failure-err.jpg",
+      "linked_target_type": "none",
+      "error_message": "Ảnh mờ, không xác định được loại chứng từ.",
+      "captured_at": "2026-03-25T10:05:00.000Z",
+      "processed_at": "2026-03-25T10:05:28.000Z",
+      "linked_at": null,
+      "sync_state": "failed"
+    }
+  ]
+}

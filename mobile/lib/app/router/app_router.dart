@@ -13,6 +13,10 @@ import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_capture_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_inbox_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_link_page.dart';
+import 'package:smartlog_swm_mobile/features/ocr/presentation/pages/ocr_review_page.dart';
 import 'package:smartlog_swm_mobile/features/outbound/presentation/pages/shipment_list_page.dart';
 import 'package:smartlog_swm_mobile/features/reports/presentation/pages/reports_page.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
@@ -215,28 +219,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.ocrInbox,
         name: AppRouteNames.ocrInbox,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.document_scanner_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrInbox,
-            title: 'OCR',
-            description:
-                'Hàng đợi OCR gắn với màn chụp và xử lý chứng từ trong Figma.',
-          );
+          return const OcrInboxPage();
         },
       ),
       GoRoute(
         path: AppRoutePaths.ocrCapture,
         name: AppRouteNames.ocrCapture,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.camera_alt_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrCapture,
-            title: 'Chụp OCR',
-            description:
-                'Màn chụp OCR sẽ được hiện thực sau khi chốt camera flow.',
-          );
+          return const OcrCapturePage();
         },
       ),
       GoRoute(
@@ -245,14 +235,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final ocrId =
               state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.fact_check_outlined,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrReviewPath(ocrId),
-            title: 'Review OCR',
-            description:
-                'Bước review OCR được giữ chỗ cho luồng xác nhận dữ liệu.',
-          );
+          return OcrReviewPage(ocrId: ocrId);
         },
       ),
       GoRoute(
@@ -261,14 +244,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (BuildContext context, GoRouterState state) {
           final ocrId =
               state.pathParameters[AppRoutePaths.ocrIdParam] ?? 'unknown';
-          return AppRoutePlaceholderPage(
-            icon: Icons.link_rounded,
-            frameLabel: '12. OCR Chụp và Xử lý',
-            routePath: AppRoutePaths.ocrLinkPath(ocrId),
-            title: 'Link OCR',
-            description:
-                'Bước liên kết OCR với chứng từ sẽ được hoàn thiện ở phase sau.',
-          );
+          return OcrLinkPage(ocrId: ocrId);
         },
       ),
       GoRoute(
