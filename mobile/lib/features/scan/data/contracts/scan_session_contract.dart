@@ -142,6 +142,7 @@ abstract class ScanSessionDraftDto with _$ScanSessionDraftDto {
 abstract class ScanSubmitRequestDto with _$ScanSubmitRequestDto {
   @JsonSerializable(explicitToJson: true)
   const factory ScanSubmitRequestDto({
+    @JsonKey(name: 'session_id') String? sessionId,
     required ScanMode mode,
     @JsonKey(name: 'reference_id') String? referenceId,
     @JsonKey(name: 'warehouse_id') String? warehouseId,
@@ -152,6 +153,7 @@ abstract class ScanSubmitRequestDto with _$ScanSubmitRequestDto {
     double? quantity,
     @JsonKey(name: 'counted_quantity') double? countedQuantity,
     @JsonKey(name: 'reason_code') String? reasonCode,
+    @JsonKey(name: 'idempotency_key') String? idempotencyKey,
   }) = _ScanSubmitRequestDto;
 
   factory ScanSubmitRequestDto.fromJson(Map<String, dynamic> json) =>
@@ -211,6 +213,7 @@ extension ScanSessionEntityMapper on ScanSessionEntity {
 
   ScanSubmitRequestDto toSubmitRequest() {
     return ScanSubmitRequestDto(
+      sessionId: id,
       mode: mode,
       referenceId: referenceId,
       warehouseId: warehouseId,
@@ -221,6 +224,27 @@ extension ScanSessionEntityMapper on ScanSessionEntity {
       quantity: quantity,
       countedQuantity: countedQuantity,
       reasonCode: reasonCode,
+      idempotencyKey: _buildSubmitIdempotencyKey(
+        sessionId: id,
+        mode: mode,
+        itemCode: resolvedItemCode,
+        locationCode: resolvedLocationCode,
+        quantity: quantity,
+      ),
     );
   }
+}
+
+String _buildSubmitIdempotencyKey({
+  required String sessionId,
+  required ScanMode mode,
+  String? itemCode,
+  String? locationCode,
+  double? quantity,
+}) {
+  final normalizedItemCode = itemCode?.trim().toUpperCase() ?? 'NA';
+  final normalizedLocationCode = locationCode?.trim().toUpperCase() ?? 'NA';
+  final normalizedQuantity = quantity?.toStringAsFixed(3) ?? '0.000';
+
+  return 'mobile-$sessionId-${mode.name}-$normalizedItemCode-$normalizedLocationCode-$normalizedQuantity';
 }
