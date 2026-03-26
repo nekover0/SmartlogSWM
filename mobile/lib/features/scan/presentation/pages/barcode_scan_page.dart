@@ -479,6 +479,8 @@ class _PreviewPanel extends StatelessWidget {
     final isDenied = session.state == ScanSessionState.cameraDenied;
     final isWorking = session.state == ScanSessionState.submitting;
     final hasRuntimeError = cameraRuntimeError != null;
+    final manualFallbackEnabled =
+      !isWorking && (cameraReady || isDenied || hasRuntimeError);
 
     return Container(
       key: const Key('barcode_scan_preview_panel'),
@@ -590,7 +592,7 @@ class _PreviewPanel extends StatelessWidget {
             child: Center(
               child: ElevatedButton.icon(
                 key: const Key('barcode_scan_lookup_button'),
-                onPressed: cameraReady && !isWorking
+                onPressed: manualFallbackEnabled
                     ? () {
                         onLookup();
                       }

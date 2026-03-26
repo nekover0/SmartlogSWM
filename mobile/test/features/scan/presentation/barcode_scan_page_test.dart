@@ -61,6 +61,10 @@ void main() {
 
     expect(find.byKey(const Key('barcode_scan_permission_denied')), findsOneWidget);
     expect(find.text('Cấp quyền lại'), findsOneWidget);
+    final fallbackButton = tester.widget<ElevatedButton>(
+      find.byKey(const Key('barcode_scan_lookup_button')),
+    );
+    expect(fallbackButton.onPressed, isNotNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
