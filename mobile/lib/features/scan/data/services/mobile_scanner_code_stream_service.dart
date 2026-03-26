@@ -1,7 +1,31 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/services/scan_code_stream_service.dart';
+
+final scanCodeStreamServiceOverrideProvider = Provider<ScanCodeStreamService?>(
+  (Ref<Object?> ref) {
+    return null;
+  },
+);
+
+final platformScanCodeStreamServiceProvider = Provider<ScanCodeStreamService>(
+  (Ref<Object?> ref) {
+    final service = MobileScannerCodeStreamService();
+    ref.onDispose(() {
+      unawaited(service.stop());
+    });
+    return service;
+  },
+);
+
+final scanCodeStreamServiceProvider = Provider<ScanCodeStreamService>((
+  Ref<Object?> ref,
+) {
+  return ref.watch(scanCodeStreamServiceOverrideProvider) ??
+      ref.watch(platformScanCodeStreamServiceProvider);
+});
 
 class MobileScannerCodeStreamService implements ScanCodeStreamService {
   MobileScannerCodeStreamService({MobileScannerController? controller})
