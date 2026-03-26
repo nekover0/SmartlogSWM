@@ -12,6 +12,8 @@ final scanFixtureDataSourceProvider = Provider<ScanFixtureDataSource>((
 });
 
 final scanRepositoryProvider = Provider<ScanRepository>((Ref<Object?> ref) {
+  // TODO(real-api): replace fixture datasource provider with API datasource
+  // once scan.lookupReceive and scan.submitReceive endpoints are available.
   return ScanRepositoryImpl(
     fixtureDataSource: ref.watch(scanFixtureDataSourceProvider),
   );
@@ -28,6 +30,8 @@ class ScanRepositoryImpl implements ScanRepository {
     required ScanLaunchContext context,
     required String lookupCode,
   }) async {
+    // TODO(real-api): route lookup to API datasource and keep fixture fallback
+    // behind a feature flag for local/offline test scenarios.
     final draft = await _fixtureDataSource.lookupReceive(
       context: context,
       lookupCode: lookupCode,
@@ -39,6 +43,8 @@ class ScanRepositoryImpl implements ScanRepository {
   Future<ScanFlowResult> submitReceive({
     required ScanSubmitRequestDto request,
   }) {
+    // TODO(real-api): call submit endpoint with idempotency key and map
+    // backend error codes to domain-safe messages.
     return _fixtureDataSource.submitReceive(request: request);
   }
 }
