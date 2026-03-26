@@ -94,3 +94,5 @@ flutter test test/features/inbound/presentation/receipt_detail_page_test.dart
 - `integration_test/` uses fixture repositories and fake auth/permission providers; it is intended for deterministic local verification.
 - `scan_flow_projection_controller.dart` is the glue that reflects a successful barcode receive back into receipt detail, receipt list, task queue, and shell badge state.
 - `build_runner` is part of the standard verification checklist even when no generated files change, so the command stays green before backend replacement work starts.
+- iOS camera permission for QR/barcode scanning only requires `NSCameraUsageDescription` in `ios/Runner/Info.plist`; no additional iOS compile-time entitlement is required for the current Runner target.
+- macOS camera entitlement is not required for the current mobile scope, but must be added to macOS entitlements if camera scanning is enabled on macOS in future.
