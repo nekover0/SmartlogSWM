@@ -87,6 +87,15 @@ class ScanSessionController
     );
   }
 
+  Future<void> onCodeDetected(String code) async {
+    final normalizedCode = _normalizeText(code);
+    if (normalizedCode == null) {
+      return;
+    }
+
+    await lookupReceiveCode(normalizedCode);
+  }
+
   Future<void> lookupReceiveCode(String lookupCode) async {
     if (!state.context.isReceive) {
       state = state.copyWith(
