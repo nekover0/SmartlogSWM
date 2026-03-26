@@ -463,6 +463,7 @@ class _PreviewPanel extends StatelessWidget {
               child: _ScannerWidgetAdapter(
                 key: Key('barcode_scan_camera_preview'),
                 onCodeDetected: onCodeDetected,
+                active: session.state == ScanSessionState.scanning,
               ),
             )
           else if (isPending)
@@ -588,13 +589,77 @@ class _ScannerWidgetAdapter extends StatelessWidget {
   const _ScannerWidgetAdapter({
     super.key,
     required this.onCodeDetected,
+    required this.active,
   });
 
   final Future<void> Function(String code) onCodeDetected;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    if (_isWidgetTestRuntime()) {
+    return _ScannerWidgetAdapterView(
+      onCodeDetected: onCodeDetected,
+      active: active,
+    );
+  }
+}
+
+class _ScannerWidgetAdapterView extends StatefulWidget {
+  const _ScannerWidgetAdapterView({
+    required this.onCodeDetected,
+    required this.active,
+  });
+
+  final Future<void> Function(String code) onCodeDetected;
+  final bool active;
+
+  @override
+  State<_ScannerWidgetAdapterView> createState() =>
+      _ScannerWidgetAdapterViewState();
+}
+
+class _ScannerWidgetAdapterViewState extends State<_ScannerWidgetAdapterView> {
+  late final bool _useFallbackPreview;
+  MobileScannerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _useFallbackPreview = _isWidgetTestRuntime();
+
+    if (_useFallbackPreview) {
+      return;
+    }
+
+    _controller = MobileScannerController(
+      autoStart: false,
+      facing: CameraFacing.back,
+    );
+    unawaited(_syncScannerActivity(widget.active));
+  }
+
+  @override
+  void didUpdateWidget(covariant _ScannerWidgetAdapterView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (_useFallbackPreview || oldWidget.active == widget.active) {
+      return;
+    }
+
+    unawaited(_syncScannerActivity(widget.active));
+  }
+
+  @override
+  void dispose() {
+    if (!_useFallbackPreview && _controller != null) {
+      unawaited(_controller!.dispose());
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_useFallbackPreview || _controller == null) {
       return const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -607,6 +672,7 @@ class _ScannerWidgetAdapter extends StatelessWidget {
     }
 
     return MobileScanner(
+      controller: _controller,
       fit: BoxFit.cover,
       onDetect: (capture) {
         for (final barcode in capture.barcodes) {
@@ -615,7 +681,7 @@ class _ScannerWidgetAdapter extends StatelessWidget {
             continue;
           }
 
-          unawaited(onCodeDetected(rawValue));
+          unawaited(widget.onCodeDetected(rawValue));
           break;
         }
       },
@@ -625,6 +691,20 @@ class _ScannerWidgetAdapter extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _syncScannerActivity(bool isActive) async {
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+
+    if (isActive) {
+      await controller.start();
+      return;
+    }
+
+    await controller.stop();
   }
 }
 
