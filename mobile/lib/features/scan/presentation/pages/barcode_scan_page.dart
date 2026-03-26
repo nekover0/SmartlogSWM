@@ -30,6 +30,7 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
   late final TextEditingController _locationController;
   late final TextEditingController _quantityController;
   bool _didReturnResult = false;
+  String? _cameraRuntimeError;
 
   @override
   void initState() {
@@ -107,6 +108,7 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
                     onLookup: _handleLookup,
                     onLookupNotFound: _lookupFixtureNotFound,
                     onRequestPermission: () {
+                      _clearCameraRuntimeError();
                       ref
                           .read(
                             scanSessionControllerProvider(
@@ -123,6 +125,18 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
                             ).notifier,
                           )
                           .onCodeDetected(code);
+                    },
+                    cameraRuntimeError: _cameraRuntimeError,
+                    onCameraRuntimeError: _setCameraRuntimeError,
+                    onRetryCameraRuntimeError: () {
+                      _clearCameraRuntimeError();
+                      ref
+                          .read(
+                            scanSessionControllerProvider(
+                              widget.launchContext,
+                            ).notifier,
+                          )
+                          .restartScanning();
                     },
                   ),
                 ),
@@ -335,6 +349,26 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
         sessionState == ScanSessionState.submitFailed ||
         sessionState == ScanSessionState.submitSuccess;
   }
+
+  void _setCameraRuntimeError(String message) {
+    if (!mounted || _cameraRuntimeError == message) {
+      return;
+    }
+
+    setState(() {
+      _cameraRuntimeError = message;
+    });
+  }
+
+  void _clearCameraRuntimeError() {
+    if (!mounted || _cameraRuntimeError == null) {
+      return;
+    }
+
+    setState(() {
+      _cameraRuntimeError = null;
+    });
+  }
 }
 
 class _ScanModeStrip extends StatelessWidget {
@@ -422,6 +456,9 @@ class _PreviewPanel extends StatelessWidget {
     required this.onLookupNotFound,
     required this.onRequestPermission,
     required this.onCodeDetected,
+    required this.cameraRuntimeError,
+    required this.onCameraRuntimeError,
+    required this.onRetryCameraRuntimeError,
   });
 
   final ScanSessionControllerState state;
@@ -430,6 +467,9 @@ class _PreviewPanel extends StatelessWidget {
   final Future<void> Function() onLookupNotFound;
   final VoidCallback onRequestPermission;
   final Future<void> Function(String code) onCodeDetected;
+  final String? cameraRuntimeError;
+  final ValueChanged<String> onCameraRuntimeError;
+  final VoidCallback onRetryCameraRuntimeError;
 
   @override
   Widget build(BuildContext context) {
@@ -438,6 +478,7 @@ class _PreviewPanel extends StatelessWidget {
     final isPending = session.state == ScanSessionState.permissionPending;
     final isDenied = session.state == ScanSessionState.cameraDenied;
     final isWorking = session.state == ScanSessionState.submitting;
+    final hasRuntimeError = cameraRuntimeError != null;
 
     return Container(
       key: const Key('barcode_scan_preview_panel'),
@@ -458,12 +499,25 @@ class _PreviewPanel extends StatelessWidget {
               ),
             ),
           ),
-          if (cameraReady)
+          if (cameraReady && !hasRuntimeError)
             Positioned.fill(
               child: _ScannerWidgetAdapter(
                 key: Key('barcode_scan_camera_preview'),
                 onCodeDetected: onCodeDetected,
                 active: session.state == ScanSessionState.scanning,
+                onRuntimeError: onCameraRuntimeError,
+              ),
+            )
+          else if (hasRuntimeError)
+            KeyedSubtree(
+              key: const Key('barcode_scan_camera_runtime_error'),
+              child: AppForbiddenState(
+                title: 'Camera đang gặp lỗi',
+                message:
+                    cameraRuntimeError ??
+                    'Không thể khởi động camera trong lúc này.',
+                retryLabel: 'Khởi động lại camera',
+                onRetry: onRetryCameraRuntimeError,
               ),
             )
           else if (isPending)
@@ -590,16 +644,19 @@ class _ScannerWidgetAdapter extends StatelessWidget {
     super.key,
     required this.onCodeDetected,
     required this.active,
+    required this.onRuntimeError,
   });
 
   final Future<void> Function(String code) onCodeDetected;
   final bool active;
+  final ValueChanged<String> onRuntimeError;
 
   @override
   Widget build(BuildContext context) {
     return _ScannerWidgetAdapterView(
       onCodeDetected: onCodeDetected,
       active: active,
+      onRuntimeError: onRuntimeError,
     );
   }
 }
@@ -608,10 +665,12 @@ class _ScannerWidgetAdapterView extends StatefulWidget {
   const _ScannerWidgetAdapterView({
     required this.onCodeDetected,
     required this.active,
+    required this.onRuntimeError,
   });
 
   final Future<void> Function(String code) onCodeDetected;
   final bool active;
+  final ValueChanged<String> onRuntimeError;
 
   @override
   State<_ScannerWidgetAdapterView> createState() =>
@@ -621,6 +680,7 @@ class _ScannerWidgetAdapterView extends StatefulWidget {
 class _ScannerWidgetAdapterViewState extends State<_ScannerWidgetAdapterView> {
   late final bool _useFallbackPreview;
   MobileScannerController? _controller;
+  String? _lastErrorMessage;
 
   @override
   void initState() {
@@ -686,6 +746,24 @@ class _ScannerWidgetAdapterViewState extends State<_ScannerWidgetAdapterView> {
         }
       },
       placeholderBuilder: (context, child) {
+        return const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0xFF031428)),
+        );
+      },
+      errorBuilder: (context, error, child) {
+        final errorMessage = error.toString();
+
+        if (_lastErrorMessage != errorMessage) {
+          _lastErrorMessage = errorMessage;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) {
+              return;
+            }
+
+            widget.onRuntimeError(errorMessage);
+          });
+        }
+
         return const DecoratedBox(
           decoration: BoxDecoration(color: Color(0xFF031428)),
         );
