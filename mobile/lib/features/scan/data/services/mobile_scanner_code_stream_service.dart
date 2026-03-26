@@ -7,19 +7,14 @@ class MobileScannerCodeStreamService implements ScanCodeStreamService {
   MobileScannerCodeStreamService({MobileScannerController? controller})
     : _controller =
           controller ??
-          MobileScannerController(
-            autoStart: false,
-            facing: CameraFacing.back,
-          );
+          MobileScannerController(autoStart: false, facing: CameraFacing.back);
 
   final MobileScannerController _controller;
   Stream<ScanCodeCapture>? _stream;
 
   @override
   Stream<ScanCodeCapture> start() {
-    _stream ??= _controller.barcodes
-        .expand(_toCaptures)
-        .asBroadcastStream();
+    _stream ??= _controller.barcodes.expand(_toCaptures).asBroadcastStream();
     unawaited(_controller.start());
     return _stream!;
   }
