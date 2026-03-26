@@ -293,6 +293,18 @@ class _ReportsPageState extends State<ReportsPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          key: const Key('reports_back_button'),
+          tooltip: 'Quay lại',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(AppRoutePaths.more);
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Báo cáo realtime'),
         actions: [
           IconButton(
