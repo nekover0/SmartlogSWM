@@ -5,6 +5,7 @@ import 'package:smartlog_swm_mobile/features/scan/data/repositories/scan_reposit
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/repositories/scan_repository.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/services/scan_code_stream_service.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
 final scanSessionControllerProvider = NotifierProviderFamily<
@@ -18,6 +19,8 @@ class ScanSessionController
   PermissionService get _permissionService => ref.read(permissionServiceProvider);
   ScanRepository get _scanRepository => ref.read(scanRepositoryProvider);
   bool _isLookupInFlight = false;
+  String? _lastDetectedCodeKey;
+  DateTime? _lastDetectedAt;
 
   @override
   ScanSessionControllerState build(ScanLaunchContext context) {
@@ -93,6 +96,21 @@ class ScanSessionController
     if (normalizedCode == null) {
       return;
     }
+
+    final detectionCodeKey = normalizeScanCodeForDuplicateCheck(normalizedCode);
+    final detectedAt = DateTime.now().toUtc();
+    final hasDuplicateKey = detectionCodeKey == _lastDetectedCodeKey;
+    final isWithinCooldown =
+        _lastDetectedAt != null &&
+        detectedAt.difference(_lastDetectedAt!).inMilliseconds <
+            kScanCodeDuplicateCooldownMs;
+
+    if (hasDuplicateKey && isWithinCooldown) {
+      return;
+    }
+
+    _lastDetectedCodeKey = detectionCodeKey;
+    _lastDetectedAt = detectedAt;
 
     await lookupReceiveCode(normalizedCode);
   }
