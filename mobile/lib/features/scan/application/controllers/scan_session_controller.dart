@@ -72,6 +72,9 @@ class ScanSessionController
       return;
     }
 
+    _lastDetectedCodeKey = null;
+    _lastDetectedAt = null;
+
     final timestamp = DateTime.now().toUtc();
 
     state = state.copyWith(
@@ -89,6 +92,30 @@ class ScanSessionController
       ),
       clearFlowResult: true,
     );
+  }
+
+  Future<void> retryLookupAfterNotFound() async {
+    if (state.session.state != ScanSessionState.lookupNotFound) {
+      return;
+    }
+
+    final lookupCode = _normalizeText(state.session.lookupCode ?? '');
+    if (lookupCode == null) {
+      await restartScanning();
+      return;
+    }
+
+    state = state.copyWith(
+      session: _mutateSession(
+        state.session,
+        state: ScanSessionState.scanning,
+        errorMessage: null,
+        syncState: SyncState.pending,
+      ),
+      clearFlowResult: true,
+    );
+
+    await lookupReceiveCode(lookupCode);
   }
 
   Future<void> onCodeDetected(String code) async {
