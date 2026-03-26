@@ -30,10 +30,7 @@ void main() {
 
     return UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(
-        routerConfig: router,
-        theme: AppTheme.light(),
-      ),
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
   }
 
@@ -101,7 +98,7 @@ void main() {
     await settleShell(tester);
 
     expect(find.byTooltip('Mở scan nhanh'), findsNothing);
-    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
   });
 }
 

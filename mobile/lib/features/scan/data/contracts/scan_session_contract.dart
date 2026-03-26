@@ -4,6 +4,82 @@ import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 part 'scan_session_contract.freezed.dart';
 part 'scan_session_contract.g.dart';
 
+/// API-aligned lookup request DTO for `scan.lookupReceive`.
+///
+/// Field set is validated against implementation plan API section:
+/// mode, lookupCode, warehouseId, referenceId.
+class LookupReceiveRequestDto {
+  const LookupReceiveRequestDto({
+    required this.mode,
+    required this.lookupCode,
+    this.warehouseId,
+    this.referenceId,
+  });
+
+  final ScanMode mode;
+  final String lookupCode;
+  final String? warehouseId;
+  final String? referenceId;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'mode': mode.name,
+      'lookup_code': lookupCode,
+      'warehouse_id': warehouseId,
+      'reference_id': referenceId,
+    };
+  }
+}
+
+/// API-aligned lookup response DTO for `scan.lookupReceive`.
+///
+/// Field set is validated against implementation plan API section:
+/// sessionId, state, resolvedItemCode, resolvedLocationCode,
+/// referenceId, warehouseId, message.
+class LookupReceiveResponseDto {
+  const LookupReceiveResponseDto({
+    required this.sessionId,
+    required this.state,
+    this.resolvedItemCode,
+    this.resolvedLocationCode,
+    this.referenceId,
+    this.warehouseId,
+    this.message,
+  });
+
+  final String sessionId;
+  final ScanSessionState state;
+  final String? resolvedItemCode;
+  final String? resolvedLocationCode;
+  final String? referenceId;
+  final String? warehouseId;
+  final String? message;
+
+  factory LookupReceiveResponseDto.fromSession(ScanSessionEntity session) {
+    return LookupReceiveResponseDto(
+      sessionId: session.id,
+      state: session.state,
+      resolvedItemCode: session.resolvedItemCode,
+      resolvedLocationCode: session.resolvedLocationCode,
+      referenceId: session.referenceId,
+      warehouseId: session.warehouseId,
+      message: session.errorMessage,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'session_id': sessionId,
+      'state': state.name,
+      'resolved_item_code': resolvedItemCode,
+      'resolved_location_code': resolvedLocationCode,
+      'reference_id': referenceId,
+      'warehouse_id': warehouseId,
+      'message': message,
+    };
+  }
+}
+
 @freezed
 abstract class ScanSessionEntity with _$ScanSessionEntity {
   @JsonSerializable(explicitToJson: true)
@@ -66,6 +142,7 @@ abstract class ScanSessionDraftDto with _$ScanSessionDraftDto {
 abstract class ScanSubmitRequestDto with _$ScanSubmitRequestDto {
   @JsonSerializable(explicitToJson: true)
   const factory ScanSubmitRequestDto({
+    @JsonKey(name: 'session_id') String? sessionId,
     required ScanMode mode,
     @JsonKey(name: 'reference_id') String? referenceId,
     @JsonKey(name: 'warehouse_id') String? warehouseId,
@@ -76,6 +153,7 @@ abstract class ScanSubmitRequestDto with _$ScanSubmitRequestDto {
     double? quantity,
     @JsonKey(name: 'counted_quantity') double? countedQuantity,
     @JsonKey(name: 'reason_code') String? reasonCode,
+    @JsonKey(name: 'idempotency_key') String? idempotencyKey,
   }) = _ScanSubmitRequestDto;
 
   factory ScanSubmitRequestDto.fromJson(Map<String, dynamic> json) =>
@@ -135,6 +213,7 @@ extension ScanSessionEntityMapper on ScanSessionEntity {
 
   ScanSubmitRequestDto toSubmitRequest() {
     return ScanSubmitRequestDto(
+      sessionId: id,
       mode: mode,
       referenceId: referenceId,
       warehouseId: warehouseId,
@@ -145,6 +224,27 @@ extension ScanSessionEntityMapper on ScanSessionEntity {
       quantity: quantity,
       countedQuantity: countedQuantity,
       reasonCode: reasonCode,
+      idempotencyKey: _buildSubmitIdempotencyKey(
+        sessionId: id,
+        mode: mode,
+        itemCode: resolvedItemCode,
+        locationCode: resolvedLocationCode,
+        quantity: quantity,
+      ),
     );
   }
+}
+
+String _buildSubmitIdempotencyKey({
+  required String sessionId,
+  required ScanMode mode,
+  String? itemCode,
+  String? locationCode,
+  double? quantity,
+}) {
+  final normalizedItemCode = itemCode?.trim().toUpperCase() ?? 'NA';
+  final normalizedLocationCode = locationCode?.trim().toUpperCase() ?? 'NA';
+  final normalizedQuantity = quantity?.toStringAsFixed(3) ?? '0.000';
+
+  return 'mobile-$sessionId-${mode.name}-$normalizedItemCode-$normalizedLocationCode-$normalizedQuantity';
 }

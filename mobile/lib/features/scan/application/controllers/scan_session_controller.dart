@@ -5,18 +5,24 @@ import 'package:smartlog_swm_mobile/features/scan/data/repositories/scan_reposit
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/repositories/scan_repository.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/services/scan_code_stream_service.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
-final scanSessionControllerProvider = NotifierProviderFamily<
-  ScanSessionController,
-  ScanSessionControllerState,
-  ScanLaunchContext
->(ScanSessionController.new);
+final scanSessionControllerProvider =
+    NotifierProviderFamily<
+      ScanSessionController,
+      ScanSessionControllerState,
+      ScanLaunchContext
+    >(ScanSessionController.new);
 
 class ScanSessionController
     extends FamilyNotifier<ScanSessionControllerState, ScanLaunchContext> {
-  PermissionService get _permissionService => ref.read(permissionServiceProvider);
+  PermissionService get _permissionService =>
+      ref.read(permissionServiceProvider);
   ScanRepository get _scanRepository => ref.read(scanRepositoryProvider);
+  bool _isLookupInFlight = false;
+  String? _lastDetectedCodeKey;
+  DateTime? _lastDetectedAt;
 
   @override
   ScanSessionControllerState build(ScanLaunchContext context) {
@@ -68,6 +74,9 @@ class ScanSessionController
       return;
     }
 
+    _lastDetectedCodeKey = null;
+    _lastDetectedAt = null;
+
     final timestamp = DateTime.now().toUtc();
 
     state = state.copyWith(
@@ -87,17 +96,14 @@ class ScanSessionController
     );
   }
 
-  Future<void> lookupReceiveCode(String lookupCode) async {
-    if (!state.context.isReceive) {
-      state = state.copyWith(
-        session: _mutateSession(
-          state.session,
-          state: ScanSessionState.lookupNotFound,
-          lookupCode: lookupCode.trim(),
-          errorMessage: 'Chỉ hỗ trợ luồng receive ở phiên bản hiện tại.',
-          syncState: SyncState.failed,
-        ),
-      );
+  Future<void> retryLookupAfterNotFound() async {
+    if (state.session.state != ScanSessionState.lookupNotFound) {
+      return;
+    }
+
+    final lookupCode = _normalizeText(state.session.lookupCode ?? '');
+    if (lookupCode == null) {
+      await restartScanning();
       return;
     }
 
@@ -105,13 +111,70 @@ class ScanSessionController
       session: _mutateSession(
         state.session,
         state: ScanSessionState.scanning,
-        lookupCode: lookupCode.trim(),
         errorMessage: null,
+        syncState: SyncState.pending,
       ),
       clearFlowResult: true,
     );
 
+    await lookupReceiveCode(lookupCode);
+  }
+
+  Future<void> onCodeDetected(String code) async {
+    final normalizedCode = _normalizeText(code);
+    if (normalizedCode == null) {
+      return;
+    }
+
+    final detectionCodeKey = normalizeScanCodeForDuplicateCheck(normalizedCode);
+    final detectedAt = DateTime.now().toUtc();
+    final hasDuplicateKey = detectionCodeKey == _lastDetectedCodeKey;
+    final isWithinCooldown =
+        _lastDetectedAt != null &&
+        detectedAt.difference(_lastDetectedAt!).inMilliseconds <
+            kScanCodeDuplicateCooldownMs;
+
+    if (hasDuplicateKey && isWithinCooldown) {
+      return;
+    }
+
+    _lastDetectedCodeKey = detectionCodeKey;
+    _lastDetectedAt = detectedAt;
+
+    await lookupReceiveCode(normalizedCode);
+  }
+
+  Future<void> lookupReceiveCode(String lookupCode) async {
+    if (_isLookupInFlight) {
+      return;
+    }
+
+    _isLookupInFlight = true;
+
     try {
+      if (!state.context.isReceive) {
+        state = state.copyWith(
+          session: _mutateSession(
+            state.session,
+            state: ScanSessionState.lookupNotFound,
+            lookupCode: lookupCode.trim(),
+            errorMessage: 'Chỉ hỗ trợ luồng receive ở phiên bản hiện tại.',
+            syncState: SyncState.failed,
+          ),
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        session: _mutateSession(
+          state.session,
+          state: ScanSessionState.scanning,
+          lookupCode: lookupCode.trim(),
+          errorMessage: null,
+        ),
+        clearFlowResult: true,
+      );
+
       final lookedUpSession = await _scanRepository.lookupReceive(
         context: state.context,
         lookupCode: lookupCode,
@@ -133,6 +196,8 @@ class ScanSessionController
           syncState: SyncState.failed,
         ),
       );
+    } finally {
+      _isLookupInFlight = false;
     }
   }
 
@@ -278,7 +343,8 @@ class ScanSessionController
       state: state ?? session.state,
       cameraGranted: cameraGranted ?? session.cameraGranted,
       lookupCode: lookupCode ?? session.lookupCode,
-      resolvedLocationCode: resolvedLocationCode ?? session.resolvedLocationCode,
+      resolvedLocationCode:
+          resolvedLocationCode ?? session.resolvedLocationCode,
       referenceId: referenceId ?? session.referenceId,
       warehouseId: warehouseId ?? session.warehouseId,
       quantity: quantity ?? session.quantity,

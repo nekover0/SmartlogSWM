@@ -94,3 +94,27 @@ flutter test test/features/inbound/presentation/receipt_detail_page_test.dart
 - `integration_test/` uses fixture repositories and fake auth/permission providers; it is intended for deterministic local verification.
 - `scan_flow_projection_controller.dart` is the glue that reflects a successful barcode receive back into receipt detail, receipt list, task queue, and shell badge state.
 - `build_runner` is part of the standard verification checklist even when no generated files change, so the command stays green before backend replacement work starts.
+- iOS camera permission for QR/barcode scanning only requires `NSCameraUsageDescription` in `ios/Runner/Info.plist`; no additional iOS compile-time entitlement is required for the current Runner target.
+- macOS camera entitlement is not required for the current mobile scope, but must be added to macOS entitlements if camera scanning is enabled on macOS in future.
+
+## Scan API Migration Mapping
+
+Repository mapping for upcoming fixture-to-API swap:
+
+- `ScanRepository.lookupReceive(...)` -> `POST /trpc/scan.lookupReceive`
+	- Request: `mode`, `lookup_code`, `warehouse_id`, `reference_id`
+	- Response: `session_id`, `state`, `resolved_item_code`, `resolved_location_code`, `reference_id`, `warehouse_id`, `message`
+- `ScanRepository.submitReceive(...)` -> `POST /trpc/scan.submitReceive`
+	- Request: `session_id`, `mode`, `reference_id`, `warehouse_id`, `item_code`, `location_code`, `quantity`, `idempotency_key`
+	- Response: `success`, `session_id`, `receipt_id`, `submitted_at`, `message`
+
+Expected API error mapping to mobile behavior:
+
+- `400`: keep current screen and show validation banner.
+- `401`: redirect to authentication flow.
+- `403`: show forbidden state and stop submit retry.
+- `404` on lookup: map to `lookupNotFound` and keep scan retry action.
+- `409` on submit: show duplicate-submit message and keep form context.
+- `422`: map to `submitFailed` with actionable guidance.
+- `429`: show rate-limit message with retry guidance.
+- `500`: map to generic failure banner and keep retry path.

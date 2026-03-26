@@ -132,6 +132,7 @@ Map<String, dynamic> _$ScanSessionDraftDtoToJson(
 _ScanSubmitRequestDto _$ScanSubmitRequestDtoFromJson(
   Map<String, dynamic> json,
 ) => _ScanSubmitRequestDto(
+  sessionId: json['session_id'] as String?,
   mode: $enumDecode(_$ScanModeEnumMap, json['mode']),
   referenceId: json['reference_id'] as String?,
   warehouseId: json['warehouse_id'] as String?,
@@ -142,11 +143,13 @@ _ScanSubmitRequestDto _$ScanSubmitRequestDtoFromJson(
   quantity: (json['quantity'] as num?)?.toDouble(),
   countedQuantity: (json['counted_quantity'] as num?)?.toDouble(),
   reasonCode: json['reason_code'] as String?,
+  idempotencyKey: json['idempotency_key'] as String?,
 );
 
 Map<String, dynamic> _$ScanSubmitRequestDtoToJson(
   _ScanSubmitRequestDto instance,
 ) => <String, dynamic>{
+  'session_id': instance.sessionId,
   'mode': _$ScanModeEnumMap[instance.mode]!,
   'reference_id': instance.referenceId,
   'warehouse_id': instance.warehouseId,
@@ -157,4 +160,5 @@ Map<String, dynamic> _$ScanSubmitRequestDtoToJson(
   'quantity': instance.quantity,
   'counted_quantity': instance.countedQuantity,
   'reason_code': instance.reasonCode,
+  'idempotency_key': instance.idempotencyKey,
 };

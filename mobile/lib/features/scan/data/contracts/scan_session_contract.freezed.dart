@@ -649,7 +649,7 @@ as DateTime?,
 /// @nodoc
 mixin _$ScanSubmitRequestDto {
 
- ScanMode get mode;@JsonKey(name: 'reference_id') String? get referenceId;@JsonKey(name: 'warehouse_id') String? get warehouseId;@JsonKey(name: 'item_code') String? get itemCode;@JsonKey(name: 'location_code') String? get locationCode;@JsonKey(name: 'source_location_code') String? get sourceLocationCode;@JsonKey(name: 'destination_location_code') String? get destinationLocationCode; double? get quantity;@JsonKey(name: 'counted_quantity') double? get countedQuantity;@JsonKey(name: 'reason_code') String? get reasonCode;
+@JsonKey(name: 'session_id') String? get sessionId; ScanMode get mode;@JsonKey(name: 'reference_id') String? get referenceId;@JsonKey(name: 'warehouse_id') String? get warehouseId;@JsonKey(name: 'item_code') String? get itemCode;@JsonKey(name: 'location_code') String? get locationCode;@JsonKey(name: 'source_location_code') String? get sourceLocationCode;@JsonKey(name: 'destination_location_code') String? get destinationLocationCode; double? get quantity;@JsonKey(name: 'counted_quantity') double? get countedQuantity;@JsonKey(name: 'reason_code') String? get reasonCode;@JsonKey(name: 'idempotency_key') String? get idempotencyKey;
 /// Create a copy of ScanSubmitRequestDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -662,16 +662,16 @@ $ScanSubmitRequestDtoCopyWith<ScanSubmitRequestDto> get copyWith => _$ScanSubmit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScanSubmitRequestDto&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.warehouseId, warehouseId) || other.warehouseId == warehouseId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.locationCode, locationCode) || other.locationCode == locationCode)&&(identical(other.sourceLocationCode, sourceLocationCode) || other.sourceLocationCode == sourceLocationCode)&&(identical(other.destinationLocationCode, destinationLocationCode) || other.destinationLocationCode == destinationLocationCode)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.countedQuantity, countedQuantity) || other.countedQuantity == countedQuantity)&&(identical(other.reasonCode, reasonCode) || other.reasonCode == reasonCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScanSubmitRequestDto&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.warehouseId, warehouseId) || other.warehouseId == warehouseId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.locationCode, locationCode) || other.locationCode == locationCode)&&(identical(other.sourceLocationCode, sourceLocationCode) || other.sourceLocationCode == sourceLocationCode)&&(identical(other.destinationLocationCode, destinationLocationCode) || other.destinationLocationCode == destinationLocationCode)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.countedQuantity, countedQuantity) || other.countedQuantity == countedQuantity)&&(identical(other.reasonCode, reasonCode) || other.reasonCode == reasonCode)&&(identical(other.idempotencyKey, idempotencyKey) || other.idempotencyKey == idempotencyKey));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,mode,referenceId,warehouseId,itemCode,locationCode,sourceLocationCode,destinationLocationCode,quantity,countedQuantity,reasonCode);
+int get hashCode => Object.hash(runtimeType,sessionId,mode,referenceId,warehouseId,itemCode,locationCode,sourceLocationCode,destinationLocationCode,quantity,countedQuantity,reasonCode,idempotencyKey);
 
 @override
 String toString() {
-  return 'ScanSubmitRequestDto(mode: $mode, referenceId: $referenceId, warehouseId: $warehouseId, itemCode: $itemCode, locationCode: $locationCode, sourceLocationCode: $sourceLocationCode, destinationLocationCode: $destinationLocationCode, quantity: $quantity, countedQuantity: $countedQuantity, reasonCode: $reasonCode)';
+  return 'ScanSubmitRequestDto(sessionId: $sessionId, mode: $mode, referenceId: $referenceId, warehouseId: $warehouseId, itemCode: $itemCode, locationCode: $locationCode, sourceLocationCode: $sourceLocationCode, destinationLocationCode: $destinationLocationCode, quantity: $quantity, countedQuantity: $countedQuantity, reasonCode: $reasonCode, idempotencyKey: $idempotencyKey)';
 }
 
 
@@ -682,7 +682,7 @@ abstract mixin class $ScanSubmitRequestDtoCopyWith<$Res>  {
   factory $ScanSubmitRequestDtoCopyWith(ScanSubmitRequestDto value, $Res Function(ScanSubmitRequestDto) _then) = _$ScanSubmitRequestDtoCopyWithImpl;
 @useResult
 $Res call({
- ScanMode mode,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'warehouse_id') String? warehouseId,@JsonKey(name: 'item_code') String? itemCode,@JsonKey(name: 'location_code') String? locationCode,@JsonKey(name: 'source_location_code') String? sourceLocationCode,@JsonKey(name: 'destination_location_code') String? destinationLocationCode, double? quantity,@JsonKey(name: 'counted_quantity') double? countedQuantity,@JsonKey(name: 'reason_code') String? reasonCode
+@JsonKey(name: 'session_id') String? sessionId, ScanMode mode,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'warehouse_id') String? warehouseId,@JsonKey(name: 'item_code') String? itemCode,@JsonKey(name: 'location_code') String? locationCode,@JsonKey(name: 'source_location_code') String? sourceLocationCode,@JsonKey(name: 'destination_location_code') String? destinationLocationCode, double? quantity,@JsonKey(name: 'counted_quantity') double? countedQuantity,@JsonKey(name: 'reason_code') String? reasonCode,@JsonKey(name: 'idempotency_key') String? idempotencyKey
 });
 
 
@@ -699,9 +699,10 @@ class _$ScanSubmitRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of ScanSubmitRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? mode = null,Object? referenceId = freezed,Object? warehouseId = freezed,Object? itemCode = freezed,Object? locationCode = freezed,Object? sourceLocationCode = freezed,Object? destinationLocationCode = freezed,Object? quantity = freezed,Object? countedQuantity = freezed,Object? reasonCode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = freezed,Object? mode = null,Object? referenceId = freezed,Object? warehouseId = freezed,Object? itemCode = freezed,Object? locationCode = freezed,Object? sourceLocationCode = freezed,Object? destinationLocationCode = freezed,Object? quantity = freezed,Object? countedQuantity = freezed,Object? reasonCode = freezed,Object? idempotencyKey = freezed,}) {
   return _then(_self.copyWith(
-mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
+as String?,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as ScanMode,referenceId: freezed == referenceId ? _self.referenceId : referenceId // ignore: cast_nullable_to_non_nullable
 as String?,warehouseId: freezed == warehouseId ? _self.warehouseId : warehouseId // ignore: cast_nullable_to_non_nullable
 as String?,itemCode: freezed == itemCode ? _self.itemCode : itemCode // ignore: cast_nullable_to_non_nullable
@@ -711,6 +712,7 @@ as String?,destinationLocationCode: freezed == destinationLocationCode ? _self.d
 as String?,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as double?,countedQuantity: freezed == countedQuantity ? _self.countedQuantity : countedQuantity // ignore: cast_nullable_to_non_nullable
 as double?,reasonCode: freezed == reasonCode ? _self.reasonCode : reasonCode // ignore: cast_nullable_to_non_nullable
+as String?,idempotencyKey: freezed == idempotencyKey ? _self.idempotencyKey : idempotencyKey // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -796,10 +798,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String? sessionId,  ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode, @JsonKey(name: 'idempotency_key')  String? idempotencyKey)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ScanSubmitRequestDto() when $default != null:
-return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode);case _:
+return $default(_that.sessionId,_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode,_that.idempotencyKey);case _:
   return orElse();
 
 }
@@ -817,10 +819,10 @@ return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String? sessionId,  ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode, @JsonKey(name: 'idempotency_key')  String? idempotencyKey)  $default,) {final _that = this;
 switch (_that) {
 case _ScanSubmitRequestDto():
-return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode);case _:
+return $default(_that.sessionId,_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode,_that.idempotencyKey);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -837,10 +839,10 @@ return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'session_id')  String? sessionId,  ScanMode mode, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'warehouse_id')  String? warehouseId, @JsonKey(name: 'item_code')  String? itemCode, @JsonKey(name: 'location_code')  String? locationCode, @JsonKey(name: 'source_location_code')  String? sourceLocationCode, @JsonKey(name: 'destination_location_code')  String? destinationLocationCode,  double? quantity, @JsonKey(name: 'counted_quantity')  double? countedQuantity, @JsonKey(name: 'reason_code')  String? reasonCode, @JsonKey(name: 'idempotency_key')  String? idempotencyKey)?  $default,) {final _that = this;
 switch (_that) {
 case _ScanSubmitRequestDto() when $default != null:
-return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode);case _:
+return $default(_that.sessionId,_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_that.locationCode,_that.sourceLocationCode,_that.destinationLocationCode,_that.quantity,_that.countedQuantity,_that.reasonCode,_that.idempotencyKey);case _:
   return null;
 
 }
@@ -852,9 +854,10 @@ return $default(_that.mode,_that.referenceId,_that.warehouseId,_that.itemCode,_t
 
 @JsonSerializable(explicitToJson: true)
 class _ScanSubmitRequestDto implements ScanSubmitRequestDto {
-  const _ScanSubmitRequestDto({required this.mode, @JsonKey(name: 'reference_id') this.referenceId, @JsonKey(name: 'warehouse_id') this.warehouseId, @JsonKey(name: 'item_code') this.itemCode, @JsonKey(name: 'location_code') this.locationCode, @JsonKey(name: 'source_location_code') this.sourceLocationCode, @JsonKey(name: 'destination_location_code') this.destinationLocationCode, this.quantity, @JsonKey(name: 'counted_quantity') this.countedQuantity, @JsonKey(name: 'reason_code') this.reasonCode});
+  const _ScanSubmitRequestDto({@JsonKey(name: 'session_id') this.sessionId, required this.mode, @JsonKey(name: 'reference_id') this.referenceId, @JsonKey(name: 'warehouse_id') this.warehouseId, @JsonKey(name: 'item_code') this.itemCode, @JsonKey(name: 'location_code') this.locationCode, @JsonKey(name: 'source_location_code') this.sourceLocationCode, @JsonKey(name: 'destination_location_code') this.destinationLocationCode, this.quantity, @JsonKey(name: 'counted_quantity') this.countedQuantity, @JsonKey(name: 'reason_code') this.reasonCode, @JsonKey(name: 'idempotency_key') this.idempotencyKey});
   factory _ScanSubmitRequestDto.fromJson(Map<String, dynamic> json) => _$ScanSubmitRequestDtoFromJson(json);
 
+@override@JsonKey(name: 'session_id') final  String? sessionId;
 @override final  ScanMode mode;
 @override@JsonKey(name: 'reference_id') final  String? referenceId;
 @override@JsonKey(name: 'warehouse_id') final  String? warehouseId;
@@ -865,6 +868,7 @@ class _ScanSubmitRequestDto implements ScanSubmitRequestDto {
 @override final  double? quantity;
 @override@JsonKey(name: 'counted_quantity') final  double? countedQuantity;
 @override@JsonKey(name: 'reason_code') final  String? reasonCode;
+@override@JsonKey(name: 'idempotency_key') final  String? idempotencyKey;
 
 /// Create a copy of ScanSubmitRequestDto
 /// with the given fields replaced by the non-null parameter values.
@@ -879,16 +883,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScanSubmitRequestDto&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.warehouseId, warehouseId) || other.warehouseId == warehouseId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.locationCode, locationCode) || other.locationCode == locationCode)&&(identical(other.sourceLocationCode, sourceLocationCode) || other.sourceLocationCode == sourceLocationCode)&&(identical(other.destinationLocationCode, destinationLocationCode) || other.destinationLocationCode == destinationLocationCode)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.countedQuantity, countedQuantity) || other.countedQuantity == countedQuantity)&&(identical(other.reasonCode, reasonCode) || other.reasonCode == reasonCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScanSubmitRequestDto&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.warehouseId, warehouseId) || other.warehouseId == warehouseId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.locationCode, locationCode) || other.locationCode == locationCode)&&(identical(other.sourceLocationCode, sourceLocationCode) || other.sourceLocationCode == sourceLocationCode)&&(identical(other.destinationLocationCode, destinationLocationCode) || other.destinationLocationCode == destinationLocationCode)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.countedQuantity, countedQuantity) || other.countedQuantity == countedQuantity)&&(identical(other.reasonCode, reasonCode) || other.reasonCode == reasonCode)&&(identical(other.idempotencyKey, idempotencyKey) || other.idempotencyKey == idempotencyKey));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,mode,referenceId,warehouseId,itemCode,locationCode,sourceLocationCode,destinationLocationCode,quantity,countedQuantity,reasonCode);
+int get hashCode => Object.hash(runtimeType,sessionId,mode,referenceId,warehouseId,itemCode,locationCode,sourceLocationCode,destinationLocationCode,quantity,countedQuantity,reasonCode,idempotencyKey);
 
 @override
 String toString() {
-  return 'ScanSubmitRequestDto(mode: $mode, referenceId: $referenceId, warehouseId: $warehouseId, itemCode: $itemCode, locationCode: $locationCode, sourceLocationCode: $sourceLocationCode, destinationLocationCode: $destinationLocationCode, quantity: $quantity, countedQuantity: $countedQuantity, reasonCode: $reasonCode)';
+  return 'ScanSubmitRequestDto(sessionId: $sessionId, mode: $mode, referenceId: $referenceId, warehouseId: $warehouseId, itemCode: $itemCode, locationCode: $locationCode, sourceLocationCode: $sourceLocationCode, destinationLocationCode: $destinationLocationCode, quantity: $quantity, countedQuantity: $countedQuantity, reasonCode: $reasonCode, idempotencyKey: $idempotencyKey)';
 }
 
 
@@ -899,7 +903,7 @@ abstract mixin class _$ScanSubmitRequestDtoCopyWith<$Res> implements $ScanSubmit
   factory _$ScanSubmitRequestDtoCopyWith(_ScanSubmitRequestDto value, $Res Function(_ScanSubmitRequestDto) _then) = __$ScanSubmitRequestDtoCopyWithImpl;
 @override @useResult
 $Res call({
- ScanMode mode,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'warehouse_id') String? warehouseId,@JsonKey(name: 'item_code') String? itemCode,@JsonKey(name: 'location_code') String? locationCode,@JsonKey(name: 'source_location_code') String? sourceLocationCode,@JsonKey(name: 'destination_location_code') String? destinationLocationCode, double? quantity,@JsonKey(name: 'counted_quantity') double? countedQuantity,@JsonKey(name: 'reason_code') String? reasonCode
+@JsonKey(name: 'session_id') String? sessionId, ScanMode mode,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'warehouse_id') String? warehouseId,@JsonKey(name: 'item_code') String? itemCode,@JsonKey(name: 'location_code') String? locationCode,@JsonKey(name: 'source_location_code') String? sourceLocationCode,@JsonKey(name: 'destination_location_code') String? destinationLocationCode, double? quantity,@JsonKey(name: 'counted_quantity') double? countedQuantity,@JsonKey(name: 'reason_code') String? reasonCode,@JsonKey(name: 'idempotency_key') String? idempotencyKey
 });
 
 
@@ -916,9 +920,10 @@ class __$ScanSubmitRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of ScanSubmitRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? mode = null,Object? referenceId = freezed,Object? warehouseId = freezed,Object? itemCode = freezed,Object? locationCode = freezed,Object? sourceLocationCode = freezed,Object? destinationLocationCode = freezed,Object? quantity = freezed,Object? countedQuantity = freezed,Object? reasonCode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = freezed,Object? mode = null,Object? referenceId = freezed,Object? warehouseId = freezed,Object? itemCode = freezed,Object? locationCode = freezed,Object? sourceLocationCode = freezed,Object? destinationLocationCode = freezed,Object? quantity = freezed,Object? countedQuantity = freezed,Object? reasonCode = freezed,Object? idempotencyKey = freezed,}) {
   return _then(_ScanSubmitRequestDto(
-mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
+as String?,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as ScanMode,referenceId: freezed == referenceId ? _self.referenceId : referenceId // ignore: cast_nullable_to_non_nullable
 as String?,warehouseId: freezed == warehouseId ? _self.warehouseId : warehouseId // ignore: cast_nullable_to_non_nullable
 as String?,itemCode: freezed == itemCode ? _self.itemCode : itemCode // ignore: cast_nullable_to_non_nullable
@@ -928,6 +933,7 @@ as String?,destinationLocationCode: freezed == destinationLocationCode ? _self.d
 as String?,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as double?,countedQuantity: freezed == countedQuantity ? _self.countedQuantity : countedQuantity // ignore: cast_nullable_to_non_nullable
 as double?,reasonCode: freezed == reasonCode ? _self.reasonCode : reasonCode // ignore: cast_nullable_to_non_nullable
+as String?,idempotencyKey: freezed == idempotencyKey ? _self.idempotencyKey : idempotencyKey // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
