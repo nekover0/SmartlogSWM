@@ -10,6 +10,7 @@ import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_cont
 import 'package:smartlog_swm_mobile/features/scan/presentation/pages/barcode_scan_page.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_theme.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_forbidden_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -215,6 +216,55 @@ void main() {
     );
     expect(nextState.session.state, ScanSessionState.scanning);
     expect(nextState.session.cameraGranted, isTrue);
+  });
+
+  testWidgets('recovers from lookup-not-found back to scanning state', (
+    WidgetTester tester,
+  ) async {
+    await setLargeSurface(tester);
+
+    const launchContext = ScanLaunchContext(mode: ScanMode.receive);
+    final container = ProviderContainer(
+      overrides: [
+        permissionServiceProvider.overrideWithValue(
+          const FakePermissionService(
+            currentStatus: CameraPermissionStatus.granted,
+          ),
+        ),
+        scanCodeStreamServiceOverrideProvider.overrideWithValue(
+          FakeScanCodeStreamService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const BarcodeScanPage(launchContext: launchContext),
+        ),
+      ),
+    );
+    await settleUi(tester);
+
+    await container
+        .read(scanSessionControllerProvider(launchContext).notifier)
+        .lookupReceiveCode('NOT-FOUND');
+    await settleUi(tester);
+
+    expect(find.byType(AppForbiddenState), findsNothing);
+    expect(find.text('Thu lai'), findsOneWidget);
+
+    await tester.tap(find.text('Thu lai'));
+    await settleUi(tester);
+
+    final recoveredState = container.read(
+      scanSessionControllerProvider(launchContext),
+    );
+    expect(recoveredState.session.state, ScanSessionState.scanning);
+    expect(find.byKey(const Key('barcode_scan_camera_preview')), findsOneWidget);
   });
 }
 
