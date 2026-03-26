@@ -171,4 +171,70 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('handles denied then retry to granted camera flow', (
+    WidgetTester tester,
+  ) async {
+    await setLargeSurface(tester);
+
+    final permissionService = _MutablePermissionService(
+      currentStatus: CameraPermissionStatus.denied,
+      requestStatus: CameraPermissionStatus.denied,
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        permissionServiceProvider.overrideWithValue(permissionService),
+        scanCodeStreamServiceOverrideProvider.overrideWithValue(
+          FakeScanCodeStreamService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const BarcodeScanPage(
+            launchContext: ScanLaunchContext(mode: ScanMode.receive),
+          ),
+        ),
+      ),
+    );
+    await settleUi(tester);
+
+    expect(find.byKey(const Key('barcode_scan_permission_denied')), findsOneWidget);
+
+    permissionService.requestStatus = CameraPermissionStatus.granted;
+    await tester.tap(find.text('Cấp quyền lại'));
+    await settleUi(tester);
+
+    final nextState = container.read(
+      scanSessionControllerProvider(const ScanLaunchContext(mode: ScanMode.receive)),
+    );
+    expect(nextState.session.state, ScanSessionState.scanning);
+    expect(nextState.session.cameraGranted, isTrue);
+  });
+}
+
+
+class _MutablePermissionService implements PermissionService {
+  _MutablePermissionService({
+    required this.currentStatus,
+    required this.requestStatus,
+  });
+
+  CameraPermissionStatus currentStatus;
+  CameraPermissionStatus requestStatus;
+
+  @override
+  Future<CameraPermissionStatus> getCameraPermissionStatus() async {
+    return currentStatus;
+  }
+
+  @override
+  Future<CameraPermissionStatus> requestCameraPermission() async {
+    return requestStatus;
+  }
 }
