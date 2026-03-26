@@ -2,20 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/core/permissions/permission_service.dart';
 import 'package:smartlog_swm_mobile/features/scan/application/controllers/scan_session_controller.dart';
+import 'package:smartlog_swm_mobile/features/scan/data/contracts/scan_session_contract.dart';
+import 'package:smartlog_swm_mobile/features/scan/data/repositories/scan_repository_impl.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
 import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
+import 'package:smartlog_swm_mobile/features/scan/domain/repositories/scan_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   ProviderContainer createContainer({
     PermissionService? permissionService,
+    ScanRepository? scanRepository,
   }) {
     return ProviderContainer(
       overrides: [
         permissionServiceProvider.overrideWithValue(
           permissionService ?? const FakePermissionService(),
         ),
+        if (scanRepository != null)
+          scanRepositoryProvider.overrideWithValue(scanRepository),
       ],
     );
   }
@@ -149,5 +156,111 @@ void main() {
       expect(state.flowResult?.locationCode, 'DOCK-01');
       expect(state.flowResult?.quantity, 20);
     });
+
+    test('onCodeDetected triggers lookup path for scanned payload', () async {
+      final repository = _CountingScanRepository();
+      final container = createContainer(scanRepository: repository);
+      addTearDown(container.dispose);
+
+      const context = ScanLaunchContext(mode: ScanMode.receive);
+      final controller = container.read(
+        scanSessionControllerProvider(context).notifier,
+      );
+
+      await controller.requestCameraAccess();
+      await controller.onCodeDetected('  RCV-240325-001  ');
+
+      final state = container.read(scanSessionControllerProvider(context));
+      expect(repository.lookupCodes, ['RCV-240325-001']);
+      expect(state.session.state, ScanSessionState.lookupSuccess);
+    });
+
+    test('dedupe guard suppresses immediate duplicate scan payload', () async {
+      final repository = _CountingScanRepository();
+      final container = createContainer(scanRepository: repository);
+      addTearDown(container.dispose);
+
+      const context = ScanLaunchContext(mode: ScanMode.receive);
+      final controller = container.read(
+        scanSessionControllerProvider(context).notifier,
+      );
+
+      await controller.requestCameraAccess();
+      await controller.onCodeDetected('rcv-dup-001');
+      await controller.onCodeDetected('RCV-DUP-001');
+
+      expect(repository.lookupCodes.length, 1);
+      expect(repository.lookupCodes.first, 'rcv-dup-001');
+    });
+
+    test('restartScanning clears dedupe memory for next identical scan', () async {
+      final repository = _CountingScanRepository();
+      final container = createContainer(scanRepository: repository);
+      addTearDown(container.dispose);
+
+      const context = ScanLaunchContext(mode: ScanMode.receive);
+      final controller = container.read(
+        scanSessionControllerProvider(context).notifier,
+      );
+
+      await controller.requestCameraAccess();
+      await controller.onCodeDetected('RCV-RESET-001');
+      await controller.restartScanning();
+      await controller.onCodeDetected('RCV-RESET-001');
+
+      expect(repository.lookupCodes.length, 2);
+    });
   });
+}
+
+class _CountingScanRepository implements ScanRepository {
+  final List<String> lookupCodes = <String>[];
+
+  @override
+  Future<ScanSessionEntity> lookupReceive({
+    required ScanLaunchContext context,
+    required String lookupCode,
+  }) async {
+    final trimmedCode = lookupCode.trim();
+    lookupCodes.add(trimmedCode);
+
+    final isNotFound = trimmedCode.toUpperCase() == 'NOT-FOUND';
+    final now = DateTime.now().toUtc();
+
+    return ScanSessionEntity(
+      id: 'scan-${context.mode.name}-$trimmedCode',
+      mode: context.mode,
+      state: isNotFound
+          ? ScanSessionState.lookupNotFound
+          : ScanSessionState.lookupSuccess,
+      cameraGranted: true,
+      lookupCode: trimmedCode,
+      resolvedItemCode: isNotFound ? null : 'SKU-MILK-18L',
+      resolvedLocationCode: isNotFound ? null : 'RCV-STAGE-01',
+      referenceId: context.referenceId,
+      warehouseId: context.warehouseId,
+      quantity: isNotFound ? null : 12,
+      errorMessage: isNotFound ? 'Không tìm thấy mã quét.' : null,
+      syncState: isNotFound ? SyncState.failed : SyncState.pending,
+      startedAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  Future<ScanFlowResult> submitReceive({
+    required ScanSubmitRequestDto request,
+  }) async {
+    return ScanFlowResult(
+      mode: request.mode,
+      sessionId: request.sessionId,
+      referenceId: request.referenceId,
+      warehouseId: request.warehouseId,
+      itemCode: request.itemCode,
+      locationCode: request.locationCode,
+      quantity: request.quantity,
+      submittedAt: DateTime.now().toUtc(),
+      success: true,
+    );
+  }
 }
