@@ -17,6 +17,7 @@ class ScanSessionController
     extends FamilyNotifier<ScanSessionControllerState, ScanLaunchContext> {
   PermissionService get _permissionService => ref.read(permissionServiceProvider);
   ScanRepository get _scanRepository => ref.read(scanRepositoryProvider);
+  bool _isLookupInFlight = false;
 
   @override
   ScanSessionControllerState build(ScanLaunchContext context) {
@@ -97,30 +98,36 @@ class ScanSessionController
   }
 
   Future<void> lookupReceiveCode(String lookupCode) async {
-    if (!state.context.isReceive) {
-      state = state.copyWith(
-        session: _mutateSession(
-          state.session,
-          state: ScanSessionState.lookupNotFound,
-          lookupCode: lookupCode.trim(),
-          errorMessage: 'Chỉ hỗ trợ luồng receive ở phiên bản hiện tại.',
-          syncState: SyncState.failed,
-        ),
-      );
+    if (_isLookupInFlight) {
       return;
     }
 
-    state = state.copyWith(
-      session: _mutateSession(
-        state.session,
-        state: ScanSessionState.scanning,
-        lookupCode: lookupCode.trim(),
-        errorMessage: null,
-      ),
-      clearFlowResult: true,
-    );
+    _isLookupInFlight = true;
 
     try {
+      if (!state.context.isReceive) {
+        state = state.copyWith(
+          session: _mutateSession(
+            state.session,
+            state: ScanSessionState.lookupNotFound,
+            lookupCode: lookupCode.trim(),
+            errorMessage: 'Chỉ hỗ trợ luồng receive ở phiên bản hiện tại.',
+            syncState: SyncState.failed,
+          ),
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        session: _mutateSession(
+          state.session,
+          state: ScanSessionState.scanning,
+          lookupCode: lookupCode.trim(),
+          errorMessage: null,
+        ),
+        clearFlowResult: true,
+      );
+
       final lookedUpSession = await _scanRepository.lookupReceive(
         context: state.context,
         lookupCode: lookupCode,
@@ -142,6 +149,8 @@ class ScanSessionController
           syncState: SyncState.failed,
         ),
       );
+    } finally {
+      _isLookupInFlight = false;
     }
   }
 
