@@ -84,8 +84,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> logout() {
-    return _secureStorageService.deleteSession();
+  Future<void> logout() async {
+    try {
+      await _remoteDataSource.logout();
+    } catch (_) {
+      // Always clear local session to complete sign-out even if the remote call fails.
+    }
+
+    await _secureStorageService.deleteSession();
   }
 
   Future<void> _syncSessionFromProfile(AuthProfileDto profile) async {

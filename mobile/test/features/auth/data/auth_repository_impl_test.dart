@@ -206,6 +206,7 @@ void main() {
       await repository.logout();
 
       expect(await repository.restoreSession(), isNull);
+      expect(remoteDataSource.logoutCallCount, 1);
     });
   });
 }
@@ -262,6 +263,7 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   Object? loginError;
   AuthProfileDto? meResponse;
   AuthPermissionsSnapshotDto? permissionsResponse;
+  int logoutCallCount = 0;
 
   @override
   Future<LoginResponseDto> login(LoginRequestDto request) async {
@@ -331,8 +333,8 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> logout() {
-    throw UnimplementedError();
+  Future<void> logout() async {
+    logoutCallCount += 1;
   }
 
   @override

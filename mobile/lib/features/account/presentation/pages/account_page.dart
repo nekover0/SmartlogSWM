@@ -5,7 +5,9 @@ import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
 import 'package:smartlog_swm_mobile/core/permissions/role_matrix.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
+import 'package:smartlog_swm_mobile/features/auth/application/services/auth_security_service.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_session_summary_dto.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -64,7 +66,7 @@ class AccountPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'Thiết lập bảo mật',
-            onPressed: () {},
+            onPressed: () => _showSessionManagementSheet(context, ref),
             icon: const Icon(Icons.verified_user_outlined),
           ),
         ],
@@ -133,7 +135,7 @@ class AccountPage extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   key: const Key('account_change_password_button'),
-                  onPressed: () {},
+                  onPressed: () => _showChangePasswordDialog(context, ref),
                   icon: const Icon(Icons.lock_outline_rounded),
                   label: const Text('ĐỔI MẬT KHẨU'),
                 ),
@@ -142,7 +144,7 @@ class AccountPage extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   key: const Key('account_manage_device_button'),
-                  onPressed: () {},
+                  onPressed: () => _showSessionManagementSheet(context, ref),
                   icon: const Icon(Icons.devices_other_outlined),
                   label: const Text('QUẢN LÝ THIẾT BỊ'),
                 ),
@@ -271,6 +273,365 @@ class AccountPage extends ConsumerWidget {
     }
 
     return profile.warehouseOptions.first.name;
+  }
+
+  Future<void> _showChangePasswordDialog(
+    BuildContext pageContext,
+    WidgetRef ref,
+  ) async {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    var errorText = '';
+    var isSubmitting = false;
+
+    await showDialog<void>(
+      context: pageContext,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder:
+              (BuildContext context, void Function(void Function()) setState) {
+                Future<void> handleSubmit() async {
+                  final oldPassword = oldPasswordController.text;
+                  final newPassword = newPasswordController.text;
+                  final confirmPassword = confirmPasswordController.text;
+
+                  if (oldPassword.trim().isEmpty ||
+                      newPassword.trim().isEmpty ||
+                      confirmPassword.trim().isEmpty) {
+                    setState(() {
+                      errorText = 'Vui lòng nhập đầy đủ thông tin mật khẩu.';
+                    });
+                    return;
+                  }
+
+                  if (newPassword != confirmPassword) {
+                    setState(() {
+                      errorText = 'Mật khẩu xác nhận không khớp.';
+                    });
+                    return;
+                  }
+
+                  setState(() {
+                    isSubmitting = true;
+                    errorText = '';
+                  });
+
+                  try {
+                    await ref
+                        .read(authSecurityServiceProvider)
+                        .changePassword(
+                          oldPassword: oldPassword,
+                          newPassword: newPassword,
+                          confirmPassword: confirmPassword,
+                        );
+
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+
+                    if (pageContext.mounted) {
+                      ScaffoldMessenger.of(pageContext).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đổi mật khẩu thành công.'),
+                        ),
+                      );
+                    }
+                  } catch (error) {
+                    setState(() {
+                      errorText = '$error';
+                      isSubmitting = false;
+                    });
+                  }
+                }
+
+                return AlertDialog(
+                  title: const Text('Đổi mật khẩu'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: oldPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Mật khẩu hiện tại',
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: newPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Mật khẩu mới',
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: confirmPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Xác nhận mật khẩu mới',
+                        ),
+                      ),
+                      if (errorText.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          errorText,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.danger),
+                        ),
+                      ],
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Hủy'),
+                    ),
+                    FilledButton(
+                      onPressed: isSubmitting ? null : handleSubmit,
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Xác nhận'),
+                    ),
+                  ],
+                );
+              },
+        );
+      },
+    );
+
+    oldPasswordController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+  }
+
+  Future<void> _showSessionManagementSheet(
+    BuildContext pageContext,
+    WidgetRef ref,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: pageContext,
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
+            child: Consumer(
+              builder: (BuildContext context, WidgetRef sheetRef, Widget? child) {
+                final sessionsState = sheetRef.watch(authSessionsProvider);
+
+                return sessionsState.when(
+                  loading: () => const SizedBox(
+                    height: 180,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (Object error, StackTrace stackTrace) => SizedBox(
+                    height: 220,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Không tải được danh sách phiên: $error',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          OutlinedButton(
+                            onPressed: () {
+                              sheetRef.invalidate(authSessionsProvider);
+                            },
+                            child: const Text('Thử lại'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  data: (List<AuthSessionSummaryDto> sessions) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Phiên đăng nhập',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Theo dõi thiết bị đăng nhập và thu hồi phiên không mong muốn.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        if (sessions.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
+                            child: Text(
+                              'Chưa có phiên đăng nhập nào được ghi nhận.',
+                            ),
+                          )
+                        else
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 340),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: sessions.length,
+                              separatorBuilder:
+                                  (BuildContext context, int index) =>
+                                      const Divider(height: 1),
+                              itemBuilder: (BuildContext context, int index) {
+                                final session = sessions[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    session.sessionCode.isEmpty
+                                        ? 'Session ${session.id}'
+                                        : session.sessionCode,
+                                  ),
+                                  subtitle: Text(_buildSessionSummary(session)),
+                                  trailing: session.isCurrent
+                                      ? const Chip(label: Text('Hiện tại'))
+                                      : IconButton(
+                                          tooltip: 'Thu hồi phiên',
+                                          icon: const Icon(
+                                            Icons.logout_rounded,
+                                            color: AppColors.danger,
+                                          ),
+                                          onPressed: () async {
+                                            try {
+                                              await sheetRef
+                                                  .read(
+                                                    authSecurityServiceProvider,
+                                                  )
+                                                  .revokeSession(
+                                                    sessionId: session.id,
+                                                  );
+                                              sheetRef.invalidate(
+                                                authSessionsProvider,
+                                              );
+
+                                              if (sheetContext.mounted) {
+                                                ScaffoldMessenger.of(
+                                                  sheetContext,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Đã thu hồi phiên.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            } catch (error) {
+                                              if (sheetContext.mounted) {
+                                                ScaffoldMessenger.of(
+                                                  sheetContext,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('$error'),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                );
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  sheetRef.invalidate(authSessionsProvider);
+                                },
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: const Text('Làm mới'),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () async {
+                                  try {
+                                    await sheetRef
+                                        .read(authSecurityServiceProvider)
+                                        .logoutAllAndClearLocalSession();
+                                    await sheetRef
+                                        .read(authControllerProvider.notifier)
+                                        .restoreSession();
+
+                                    if (sheetContext.mounted) {
+                                      Navigator.of(sheetContext).pop();
+                                    }
+                                    if (pageContext.mounted) {
+                                      ScaffoldMessenger.of(
+                                        pageContext,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Đã đăng xuất toàn bộ phiên.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (error) {
+                                    if (sheetContext.mounted) {
+                                      ScaffoldMessenger.of(
+                                        sheetContext,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('$error')),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.security_rounded),
+                                label: const Text('Đăng xuất tất cả'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _buildSessionSummary(AuthSessionSummaryDto session) {
+    final parts = <String>[];
+    if (session.deviceName?.trim().isNotEmpty == true) {
+      parts.add(session.deviceName!.trim());
+    }
+    if (session.ipAddress?.trim().isNotEmpty == true) {
+      parts.add(session.ipAddress!.trim());
+    }
+    if (session.lastSeenAt != null) {
+      parts.add('Hoạt động: ${_formatDateTime(session.lastSeenAt!)}');
+    }
+
+    return parts.isEmpty ? session.channel : parts.join(' · ');
   }
 
   List<_PermissionGroupData> _buildPermissionGroups(AppRole? role) {
