@@ -121,6 +121,74 @@ void main() {
       expect(httpClient.requests.single.requiresAuth, isTrue);
     });
 
+    test('login then getMe flow calls login then /me in sequence', () async {
+      // simulate login response
+      httpClient.mapResponse = <String, dynamic>{
+        'accessToken': 'access-token',
+        'refreshToken': 'refresh-token',
+        'tokenType': 'Bearer',
+        'expiresIn': 900,
+        'sessionId': 'session-001',
+        'selectedWarehouseId': 'wh-01',
+        'warehouseOptions': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'wh-01',
+            'code': 'WH5.1',
+            'name': 'Kho 5.1 - Phu My',
+          },
+        ],
+        'user': <String, dynamic>{
+          'id': 'user-001',
+          'username': 'warehouse.keeper',
+          'fullName': 'Warehouse Keeper',
+          'roleCodes': <String>['WAREHOUSE_KEEPER'],
+          'mustChangePassword': false,
+        },
+      };
+
+      final loginResp = await apiClient.login(
+        const LoginRequestDto(
+          username: 'warehouse.keeper',
+          password: 'secret',
+          deviceId: 'android-device-001',
+          deviceName: 'Pixel 8',
+        ),
+      );
+
+      // now simulate the /me response
+      httpClient.mapResponse = <String, dynamic>{
+        'id': 'user-001',
+        'userCode': 'warehouse.keeper',
+        'username': 'warehouse.keeper',
+        'fullName': 'Warehouse Keeper',
+        'roleCodes': <String>['WAREHOUSE_KEEPER'],
+        'selectedWarehouseId': 'wh-01',
+        'warehouseOptions': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'wh-01',
+            'code': 'WH5.1',
+            'name': 'Kho 5.1 - Phu My',
+          },
+        ],
+        'ownerScope': <String>[],
+        'channel': 'MOBILE',
+        'mustChangePassword': false,
+      };
+
+      final me = await apiClient.getMe();
+
+      // basic assertions
+      expect(loginResp.accessToken, 'access-token');
+      expect(me.id, 'user-001');
+
+      // ensure both calls were recorded in sequence
+      expect(httpClient.requests, hasLength(2));
+      expect(httpClient.requests[0].method, 'POST_MAP');
+      expect(httpClient.requests[0].path, '/api/v1/auth/login');
+      expect(httpClient.requests[1].method, 'GET_MAP');
+      expect(httpClient.requests[1].path, '/api/v1/auth/me');
+      expect(httpClient.requests[1].requiresAuth, isTrue);
+    });
     test('getMyPermissions calls expected endpoint', () async {
       httpClient.mapResponse = <String, dynamic>{
         'roleCodes': <String>['ADMIN'],
