@@ -67,6 +67,14 @@ void main() {
       expect(request.confirmPassword, 'new-pass');
     });
 
+    test('forwards revoke-session request to remote datasource', () async {
+      final service = container.read(authSecurityServiceProvider);
+
+      await service.revokeSession(sessionId: 'ses-002');
+
+      expect(remoteDataSource.lastRevokedSessionId, 'ses-002');
+    });
+
     test('logs out all and clears local session', () async {
       await secureStorageService.saveSession(_TestData.session);
       final service = container.read(authSecurityServiceProvider);
@@ -111,6 +119,7 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   int logoutAllCallCount = 0;
   ChangePasswordRequestDto? lastChangePasswordRequest;
   String? lastSelectedWarehouseId;
+  String? lastRevokedSessionId;
   SelectWarehouseResponseDto? selectWarehouseResponse;
 
   @override
@@ -155,8 +164,8 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> revokeSession({required String sessionId}) {
-    throw UnimplementedError();
+  Future<void> revokeSession({required String sessionId}) async {
+    lastRevokedSessionId = sessionId;
   }
 
   @override

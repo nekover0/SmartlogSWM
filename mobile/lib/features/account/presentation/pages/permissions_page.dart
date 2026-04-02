@@ -78,6 +78,7 @@ class PermissionsPage extends ConsumerWidget {
           _ActivityLogCard(logs: _buildActivityLogs(session?.loggedInAt)),
           const SizedBox(height: AppSpacing.md),
           FilledButton.icon(
+            key: const Key('permissions_manage_users_button'),
             onPressed: canAccessAdmin
                 ? () {
                     context.go(AppRoutePaths.userAdmin);

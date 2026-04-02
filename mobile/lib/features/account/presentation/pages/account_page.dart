@@ -407,10 +407,6 @@ class AccountPage extends ConsumerWidget {
         );
       },
     );
-
-    oldPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
   }
 
   Future<void> _showSessionManagementSheet(

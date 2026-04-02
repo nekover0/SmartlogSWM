@@ -180,6 +180,12 @@ class _WarehouseContextPageState extends ConsumerState<WarehouseContextPage> {
         if (option.id == selectedFromProfile) {
           return option.id;
         }
+
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
       }
     }
 
