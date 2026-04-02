@@ -42,7 +42,9 @@ Future<AppEnvironment> loadAppEnvironment({AssetBundle? assetBundle}) async {
   final bundle = assetBundle ?? rootBundle;
 
   try {
-    final jsonText = await bundle.loadString('assets/config/app_environment.json');
+    final jsonText = await bundle.loadString(
+      'assets/config/app_environment.json',
+    );
     final payload = jsonDecode(jsonText) as Map<String, dynamic>;
     final apiBaseUrl = (payload['apiBaseUrl'] as String?)?.trim() ?? '';
 

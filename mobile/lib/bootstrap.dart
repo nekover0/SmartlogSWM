@@ -8,9 +8,7 @@ Future<ProviderContainer> createBootstrapContainer() async {
   final appEnvironment = await loadAppEnvironment();
 
   final container = ProviderContainer(
-    overrides: [
-      appEnvironmentProvider.overrideWithValue(appEnvironment),
-    ],
+    overrides: [appEnvironmentProvider.overrideWithValue(appEnvironment)],
   );
 
   container.read(authControllerProvider);
