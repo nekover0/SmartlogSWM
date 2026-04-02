@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartlog_swm_mobile/core/storage/secure_storage_provider.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/datasources/auth_fixture_data_source.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -6,10 +7,6 @@ import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.da
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/repositories/auth_repository.dart';
-
-final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
-  return FlutterSecureStorageService();
-});
 
 final authFixtureDataSourceProvider = Provider<AuthFixtureDataSource>((ref) {
   return AuthFixtureDataSource();

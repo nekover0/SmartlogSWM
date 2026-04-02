@@ -47,6 +47,7 @@ class AuthApiClient implements AuthApi {
     final payload = await _httpClient.postMap(
       '/api/v1/auth/login',
       data: request.toJson(),
+      requiresAuth: false,
     );
 
     return LoginResponseDto.fromApiJson(payload);
@@ -57,6 +58,7 @@ class AuthApiClient implements AuthApi {
     final payload = await _httpClient.postMap(
       '/api/v1/auth/refresh',
       data: <String, dynamic>{'refreshToken': refreshToken},
+      requiresAuth: false,
     );
 
     return AuthRefreshResponseDto.fromJson(payload);

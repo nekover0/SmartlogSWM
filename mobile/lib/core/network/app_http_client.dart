@@ -6,9 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/core/config/app_environment.dart';
 import 'package:smartlog_swm_mobile/core/network/network_exception.dart';
+import 'package:smartlog_swm_mobile/core/storage/secure_storage_provider.dart';
+import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
+
+const String skipAuthorizationHeaderExtraKey = 'skipAuthorizationHeader';
 
 final dioProvider = Provider<Dio>((Ref<Object?> ref) {
   final baseUrl = ref.watch(apiBaseUrlProvider);
+  final secureStorageService = ref.watch(secureStorageServiceProvider);
 
   final dio = Dio(
     BaseOptions(
@@ -25,6 +30,9 @@ final dioProvider = Provider<Dio>((Ref<Object?> ref) {
   );
 
   dio.interceptors.add(_RequestIdInterceptor());
+  dio.interceptors.add(
+    _AuthTokenInterceptor(secureStorageService: secureStorageService),
+  );
 
   if (kDebugMode) {
     dio.interceptors.add(
@@ -50,12 +58,14 @@ abstract interface class AppHttpClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   });
 
   Future<List<dynamic>> getList(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   });
 
   Future<Map<String, dynamic>> postMap(
@@ -63,6 +73,7 @@ abstract interface class AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   });
 
   Future<void> postVoid(
@@ -70,6 +81,7 @@ abstract interface class AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   });
 }
 
@@ -83,12 +95,13 @@ class DioAppHttpClient implements AppHttpClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     try {
       final response = await _dio.get<Object?>(
         path,
         queryParameters: queryParameters,
-        options: options,
+        options: _resolveOptions(options, requiresAuth: requiresAuth),
       );
 
       return _asMap(response.data, path: path);
@@ -102,12 +115,13 @@ class DioAppHttpClient implements AppHttpClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     try {
       final response = await _dio.get<Object?>(
         path,
         queryParameters: queryParameters,
-        options: options,
+        options: _resolveOptions(options, requiresAuth: requiresAuth),
       );
 
       final data = response.data;
@@ -133,13 +147,14 @@ class DioAppHttpClient implements AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     try {
       final response = await _dio.post<Object?>(
         path,
         data: data,
         queryParameters: queryParameters,
-        options: options,
+        options: _resolveOptions(options, requiresAuth: requiresAuth),
       );
 
       return _asMap(response.data, path: path);
@@ -154,13 +169,14 @@ class DioAppHttpClient implements AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     try {
       await _dio.post<void>(
         path,
         data: data,
         queryParameters: queryParameters,
-        options: options,
+        options: _resolveOptions(options, requiresAuth: requiresAuth),
       );
     } on DioException catch (error) {
       throw mapDioException(error);
@@ -186,6 +202,20 @@ class DioAppHttpClient implements AppHttpClient {
       message: 'Expected an object response from $path.',
     );
   }
+
+  Options _resolveOptions(Options? options, {required bool requiresAuth}) {
+    final baseOptions = options ?? Options();
+    if (requiresAuth) {
+      return baseOptions;
+    }
+
+    return baseOptions.copyWith(
+      extra: <String, Object?>{
+        ...?baseOptions.extra,
+        skipAuthorizationHeaderExtraKey: true,
+      },
+    );
+  }
 }
 
 class _RequestIdInterceptor extends Interceptor {
@@ -199,5 +229,30 @@ class _RequestIdInterceptor extends Interceptor {
     final timestamp = DateTime.now().toUtc().microsecondsSinceEpoch;
     final randomHex = Random().nextInt(0x7fffffff).toRadixString(16);
     return 'swm-$timestamp-$randomHex';
+  }
+}
+
+class _AuthTokenInterceptor extends QueuedInterceptor {
+  _AuthTokenInterceptor({required SecureStorageService secureStorageService})
+    : _secureStorageService = secureStorageService;
+
+  final SecureStorageService _secureStorageService;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final skipAuth = options.extra[skipAuthorizationHeaderExtraKey] == true;
+    if (!skipAuth) {
+      final session = await _secureStorageService.getSession();
+      final accessToken = session?.accessToken.trim();
+      if (accessToken != null && accessToken.isNotEmpty) {
+        options.headers[HttpHeaders.authorizationHeader] =
+            'Bearer $accessToken';
+      }
+    }
+
+    handler.next(options);
   }
 }

@@ -51,6 +51,7 @@ void main() {
       expect(httpClient.requests, hasLength(1));
       expect(httpClient.requests.single.method, 'POST_MAP');
       expect(httpClient.requests.single.path, '/api/v1/auth/login');
+      expect(httpClient.requests.single.requiresAuth, isFalse);
       expect(httpClient.requests.single.data, <String, dynamic>{
         'username': 'warehouse.keeper',
         'password': 'secret',
@@ -81,6 +82,7 @@ void main() {
       expect(httpClient.requests, hasLength(1));
       expect(httpClient.requests.single.method, 'POST_MAP');
       expect(httpClient.requests.single.path, '/api/v1/auth/refresh');
+      expect(httpClient.requests.single.requiresAuth, isFalse);
       expect(httpClient.requests.single.data, <String, dynamic>{
         'refreshToken': 'refresh-123',
       });
@@ -113,8 +115,10 @@ void main() {
       expect(httpClient.requests, hasLength(2));
       expect(httpClient.requests[0].method, 'GET_MAP');
       expect(httpClient.requests[0].path, '/api/v1/auth/me/permissions');
+      expect(httpClient.requests[0].requiresAuth, isTrue);
       expect(httpClient.requests[1].method, 'GET_LIST');
       expect(httpClient.requests[1].path, '/api/v1/auth/sessions');
+      expect(httpClient.requests[1].requiresAuth, isTrue);
     });
 
     test(
@@ -141,8 +145,10 @@ void main() {
         expect(httpClient.requests, hasLength(2));
         expect(httpClient.requests[0].method, 'POST_VOID');
         expect(httpClient.requests[0].path, '/api/v1/auth/change-password');
+        expect(httpClient.requests[0].requiresAuth, isTrue);
         expect(httpClient.requests[1].method, 'POST_MAP');
         expect(httpClient.requests[1].path, '/api/v1/auth/select-warehouse');
+        expect(httpClient.requests[1].requiresAuth, isTrue);
         expect(httpClient.requests[1].data, <String, dynamic>{
           'warehouseId': 'wh-02',
         });
@@ -161,6 +167,7 @@ class _FakeAppHttpClient implements AppHttpClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     requests.add(
       _RecordedRequest(
@@ -168,6 +175,7 @@ class _FakeAppHttpClient implements AppHttpClient {
         path: path,
         data: null,
         queryParameters: queryParameters,
+        requiresAuth: requiresAuth,
       ),
     );
 
@@ -179,6 +187,7 @@ class _FakeAppHttpClient implements AppHttpClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     requests.add(
       _RecordedRequest(
@@ -186,6 +195,7 @@ class _FakeAppHttpClient implements AppHttpClient {
         path: path,
         data: null,
         queryParameters: queryParameters,
+        requiresAuth: requiresAuth,
       ),
     );
 
@@ -198,6 +208,7 @@ class _FakeAppHttpClient implements AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     requests.add(
       _RecordedRequest(
@@ -205,6 +216,7 @@ class _FakeAppHttpClient implements AppHttpClient {
         path: path,
         data: data,
         queryParameters: queryParameters,
+        requiresAuth: requiresAuth,
       ),
     );
 
@@ -217,6 +229,7 @@ class _FakeAppHttpClient implements AppHttpClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool requiresAuth = true,
   }) async {
     requests.add(
       _RecordedRequest(
@@ -224,6 +237,7 @@ class _FakeAppHttpClient implements AppHttpClient {
         path: path,
         data: data,
         queryParameters: queryParameters,
+        requiresAuth: requiresAuth,
       ),
     );
   }
@@ -235,10 +249,12 @@ class _RecordedRequest {
     required this.path,
     required this.data,
     required this.queryParameters,
+    required this.requiresAuth,
   });
 
   final String method;
   final String path;
   final Object? data;
   final Map<String, dynamic>? queryParameters;
+  final bool requiresAuth;
 }
