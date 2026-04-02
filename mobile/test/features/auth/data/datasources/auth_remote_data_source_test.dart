@@ -23,7 +23,7 @@ void main() {
           message: 'Invalid credentials',
         ),
       );
-      final dataSource = AuthRemoteDataSource(
+      final dataSource = AuthRemoteDataSourceImpl(
         api: api,
         errorMapper: const AuthErrorMapper(),
       );

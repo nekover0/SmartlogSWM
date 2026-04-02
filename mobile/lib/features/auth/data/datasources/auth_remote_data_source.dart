@@ -17,14 +17,38 @@ final authErrorMapperProvider = Provider<AuthErrorMapper>((Ref<Object?> ref) {
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((
   Ref<Object?> ref,
 ) {
-  return AuthRemoteDataSource(
+  return AuthRemoteDataSourceImpl(
     api: ref.watch(authApiClientProvider),
     errorMapper: ref.watch(authErrorMapperProvider),
   );
 });
 
-class AuthRemoteDataSource {
-  AuthRemoteDataSource({
+abstract interface class AuthRemoteDataSource {
+  Future<LoginResponseDto> login(LoginRequestDto request);
+
+  Future<AuthRefreshResponseDto> refresh({required String refreshToken});
+
+  Future<AuthProfileDto> getMe();
+
+  Future<AuthPermissionsSnapshotDto> getMyPermissions();
+
+  Future<List<AuthSessionSummaryDto>> getSessions();
+
+  Future<void> changePassword(ChangePasswordRequestDto request);
+
+  Future<SelectWarehouseResponseDto> selectWarehouse({
+    required String warehouseId,
+  });
+
+  Future<void> revokeSession({required String sessionId});
+
+  Future<void> logout();
+
+  Future<void> logoutAll();
+}
+
+class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
+  AuthRemoteDataSourceImpl({
     required AuthApi api,
     required AuthErrorMapper errorMapper,
   }) : _api = api,
@@ -33,6 +57,7 @@ class AuthRemoteDataSource {
   final AuthApi _api;
   final AuthErrorMapper _errorMapper;
 
+  @override
   Future<LoginResponseDto> login(LoginRequestDto request) async {
     try {
       return await _api.login(request);
@@ -41,6 +66,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<AuthRefreshResponseDto> refresh({required String refreshToken}) async {
     try {
       return await _api.refresh(refreshToken: refreshToken);
@@ -49,6 +75,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<AuthProfileDto> getMe() async {
     try {
       return await _api.getMe();
@@ -57,6 +84,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
     try {
       return await _api.getMyPermissions();
@@ -65,6 +93,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<List<AuthSessionSummaryDto>> getSessions() async {
     try {
       return await _api.getSessions();
@@ -73,6 +102,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<void> changePassword(ChangePasswordRequestDto request) async {
     try {
       await _api.changePassword(request);
@@ -81,6 +111,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<SelectWarehouseResponseDto> selectWarehouse({
     required String warehouseId,
   }) async {
@@ -91,6 +122,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<void> revokeSession({required String sessionId}) async {
     try {
       await _api.revokeSession(sessionId: sessionId);
@@ -99,6 +131,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<void> logout() async {
     try {
       await _api.logout();
@@ -107,6 +140,7 @@ class AuthRemoteDataSource {
     }
   }
 
+  @override
   Future<void> logoutAll() async {
     try {
       await _api.logoutAll();
