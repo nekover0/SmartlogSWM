@@ -73,6 +73,10 @@ void main() {
     test('logs in with remote datasource and persists session', () async {
       remoteDataSource.loginResponse = const LoginResponseDto(
         accessToken: 'api-token-user-ops-001',
+        refreshToken: 'api-refresh-ops-001',
+        expiresIn: 900,
+        sessionId: 'session-ops-001',
+        tokenType: 'Bearer',
         user: AuthUser(
           id: 'user-ops-001',
           username: 'ops.supervisor',
@@ -91,6 +95,10 @@ void main() {
       );
 
       expect(session.accessToken, 'api-token-user-ops-001');
+      expect(session.refreshToken, 'api-refresh-ops-001');
+      expect(session.expiresIn, 900);
+      expect(session.sessionId, 'session-ops-001');
+      expect(session.tokenType, 'Bearer');
       expect(session.currentUser.displayName, 'Operations Supervisor');
       expect(session.currentUser.role, 'Operations Supervisor');
       expect(session.loggedInAt, DateTime.utc(2026, 3, 23, 8, 30));

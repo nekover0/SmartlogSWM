@@ -8,7 +8,7 @@ import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.d
 import 'package:smartlog_swm_mobile/features/auth/domain/repositories/auth_repository.dart';
 
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
-  return InMemorySecureStorageService();
+  return FlutterSecureStorageService();
 });
 
 final authFixtureDataSourceProvider = Provider<AuthFixtureDataSource>((ref) {
@@ -50,6 +50,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final now = _clock().toUtc();
     final session = AuthSession(
       accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      expiresIn: response.expiresIn,
+      sessionId: response.sessionId,
+      tokenType: response.tokenType,
       currentUser: response.user,
       loggedInAt: now,
       persistedAt: now,
