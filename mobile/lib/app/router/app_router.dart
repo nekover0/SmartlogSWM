@@ -5,6 +5,7 @@ import 'package:smartlog_swm_mobile/app/router/app_redirect_guard.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_names.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/router/app_shell_route.dart';
+import 'package:smartlog_swm_mobile/core/network/auth_session_invalidation_signal.dart';
 import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
@@ -46,6 +47,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ) {
     refreshNotifier.markNeedsRefresh();
   });
+  ref.listen<AuthSessionInvalidationSignal>(
+    authSessionInvalidationSignalProvider,
+    (
+      AuthSessionInvalidationSignal? previous,
+      AuthSessionInvalidationSignal next,
+    ) {
+      ref.read(authControllerProvider.notifier).restoreSession();
+      refreshNotifier.markNeedsRefresh();
+    },
+  );
 
   return GoRouter(
     initialLocation: AppRoutePaths.login,

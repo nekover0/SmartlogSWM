@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/core/config/app_environment.dart';
+import 'package:smartlog_swm_mobile/core/network/auth_session_invalidation_signal.dart';
 import 'package:smartlog_swm_mobile/core/network/network_exception.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_provider.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
@@ -13,6 +14,7 @@ final authSessionRefresherProvider = Provider<AuthSessionRefresher>((
 ) {
   return DioAuthSessionRefresher(
     secureStorageService: ref.watch(secureStorageServiceProvider),
+    invalidationSignal: ref.watch(authSessionInvalidationSignalProvider),
     dio: Dio(
       BaseOptions(
         baseUrl: ref.watch(apiBaseUrlProvider),
@@ -37,13 +39,16 @@ abstract interface class AuthSessionRefresher {
 class DioAuthSessionRefresher implements AuthSessionRefresher {
   DioAuthSessionRefresher({
     required SecureStorageService secureStorageService,
+    required AuthSessionInvalidationSignal invalidationSignal,
     required Dio dio,
     required DateTime Function() clock,
   }) : _secureStorageService = secureStorageService,
+       _invalidationSignal = invalidationSignal,
        _dio = dio,
        _clock = clock;
 
   final SecureStorageService _secureStorageService;
+  final AuthSessionInvalidationSignal _invalidationSignal;
   final Dio _dio;
   final DateTime Function() _clock;
 
@@ -72,7 +77,9 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
     final currentSession = await _secureStorageService.getSession();
     final refreshToken = currentSession?.refreshToken?.trim();
 
-    if (currentSession == null || refreshToken == null || refreshToken.isEmpty) {
+    if (currentSession == null ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
       return null;
     }
 
@@ -83,18 +90,21 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
       );
 
       final payload = _asMap(response.data);
-      final updatedAccessToken = (payload['accessToken'] as String? ?? '').trim();
+      final updatedAccessToken = (payload['accessToken'] as String? ?? '')
+          .trim();
       if (updatedAccessToken.isEmpty) {
         return null;
       }
 
       final updatedSession = AuthSession(
         accessToken: updatedAccessToken,
-        refreshToken: (payload['refreshToken'] as String?)?.trim() ??
+        refreshToken:
+            (payload['refreshToken'] as String?)?.trim() ??
             currentSession.refreshToken,
         expiresIn: payload['expiresIn'] as int? ?? currentSession.expiresIn,
         sessionId:
-            (payload['sessionId'] as String?)?.trim() ?? currentSession.sessionId,
+            (payload['sessionId'] as String?)?.trim() ??
+            currentSession.sessionId,
         tokenType: currentSession.tokenType,
         currentUser: currentSession.currentUser,
         loggedInAt: currentSession.loggedInAt,
@@ -107,6 +117,7 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
       final code = _extractBusinessCode(error.response?.data);
       if (_isTerminalRefreshFailureCode(code)) {
         await _secureStorageService.deleteSession();
+        _invalidationSignal.markInvalidated();
       }
 
       throw mapDioException(error);
