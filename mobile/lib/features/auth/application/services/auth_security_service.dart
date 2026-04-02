@@ -5,6 +5,8 @@ import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_c
 import 'package:smartlog_swm_mobile/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_session_summary_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/change_password_request_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_user.dart';
 
 final authSecurityServiceProvider = Provider<AuthSecurityService>((
   Ref<Object?> ref,
@@ -12,6 +14,7 @@ final authSecurityServiceProvider = Provider<AuthSecurityService>((
   return AuthSecurityService(
     remoteDataSource: ref.watch(authRemoteDataSourceProvider),
     secureStorageService: ref.watch(secureStorageServiceProvider),
+    clock: () => DateTime.now().toUtc(),
   );
 });
 
@@ -30,11 +33,14 @@ class AuthSecurityService {
   AuthSecurityService({
     required AuthRemoteDataSource remoteDataSource,
     required SecureStorageService secureStorageService,
+    required DateTime Function() clock,
   }) : _remoteDataSource = remoteDataSource,
-       _secureStorageService = secureStorageService;
+       _secureStorageService = secureStorageService,
+       _clock = clock;
 
   final AuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
+  final DateTime Function() _clock;
 
   Future<List<AuthSessionSummaryDto>> getSessions() {
     return _remoteDataSource.getSessions();
@@ -61,5 +67,47 @@ class AuthSecurityService {
   Future<void> logoutAllAndClearLocalSession() async {
     await _remoteDataSource.logoutAll();
     await _secureStorageService.deleteSession();
+  }
+
+  Future<void> selectWarehouse({
+    required String warehouseId,
+    required String warehouseName,
+  }) async {
+    final response = await _remoteDataSource.selectWarehouse(
+      warehouseId: warehouseId,
+    );
+    final currentSession = await _secureStorageService.getSession();
+    if (currentSession == null) {
+      return;
+    }
+
+    final selectedWarehouseId = response.selectedWarehouseId.trim().isEmpty
+        ? warehouseId
+        : response.selectedWarehouseId.trim();
+    final updatedAccessToken = response.accessToken.trim().isEmpty
+        ? currentSession.accessToken
+        : response.accessToken.trim();
+
+    final updatedSession = AuthSession(
+      accessToken: updatedAccessToken,
+      refreshToken: currentSession.refreshToken,
+      expiresIn: currentSession.expiresIn,
+      sessionId: currentSession.sessionId,
+      tokenType: currentSession.tokenType,
+      currentUser: AuthUser(
+        id: currentSession.currentUser.id,
+        username: currentSession.currentUser.username,
+        displayName: currentSession.currentUser.displayName,
+        role: currentSession.currentUser.role,
+        siteId: selectedWarehouseId,
+        siteName: warehouseName.trim().isEmpty
+            ? currentSession.currentUser.siteName
+            : warehouseName.trim(),
+      ),
+      loggedInAt: currentSession.loggedInAt,
+      persistedAt: _clock(),
+    );
+
+    await _secureStorageService.saveSession(updatedSession);
   }
 }

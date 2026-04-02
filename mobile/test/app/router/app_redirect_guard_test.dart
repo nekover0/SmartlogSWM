@@ -12,6 +12,7 @@ void main() {
     required String role,
     String displayName = 'Test User',
     String siteName = 'Test Site',
+    String siteId = 'site-1',
   }) {
     return AuthSession(
       accessToken: 'token',
@@ -20,7 +21,7 @@ void main() {
         username: 'test.user',
         displayName: displayName,
         role: role,
-        siteId: 'site-1',
+        siteId: siteId,
         siteName: siteName,
       ),
       loggedInAt: DateTime.utc(2026, 3, 24),
@@ -92,4 +93,34 @@ void main() {
       AppRoutePaths.home,
     );
   });
+
+  test(
+    'keeps authenticated user on login while waiting warehouse selection',
+    () {
+      final session = buildSession(role: 'Warehouse Keeper', siteId: '');
+
+      final result = resolveAppRedirectTarget(
+        location: AppRoutePaths.login,
+        authState: AsyncData<AuthSession?>(session),
+        lastOperation: AuthOperation.login,
+      );
+
+      expect(result, isNull);
+    },
+  );
+
+  test(
+    'redirects protected routes to login when warehouse context is missing',
+    () {
+      final session = buildSession(role: 'Warehouse Keeper', siteId: '');
+
+      final result = resolveAppRedirectTarget(
+        location: AppRoutePaths.inventory,
+        authState: AsyncData<AuthSession?>(session),
+        lastOperation: AuthOperation.login,
+      );
+
+      expect(result, AppRoutePaths.login);
+    },
+  );
 }

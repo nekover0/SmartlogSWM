@@ -27,9 +27,18 @@ String? resolveAppRedirectTarget({
         : AppRoutePaths.login;
   }
 
+  final hasWarehouseContext = session.currentUser.siteId.trim().isNotEmpty;
   final roleName = session.currentUser.role;
   if (normalizedLocation == AppRoutePaths.login) {
+    if (!hasWarehouseContext) {
+      return null;
+    }
+
     return RoleGuard.defaultLandingPathForRoleName(roleName);
+  }
+
+  if (!hasWarehouseContext) {
+    return AppRoutePaths.login;
   }
 
   if (!RoleGuard.canAccessLocation(

@@ -76,6 +76,32 @@ void main() {
       expect(remoteDataSource.logoutAllCallCount, 1);
       expect(await secureStorageService.getSession(), isNull);
     });
+
+    test(
+      'applies selected warehouse and refreshed token to local session',
+      () async {
+        await secureStorageService.saveSession(_TestData.session);
+        remoteDataSource.selectWarehouseResponse =
+            const SelectWarehouseResponseDto(
+              selectedWarehouseId: 'wh-03',
+              accessToken: 'new-access-token-after-select',
+            );
+
+        final service = container.read(authSecurityServiceProvider);
+
+        await service.selectWarehouse(
+          warehouseId: 'wh-03',
+          warehouseName: 'Kho 3 - Sai Gon',
+        );
+
+        final updated = await secureStorageService.getSession();
+        expect(remoteDataSource.lastSelectedWarehouseId, 'wh-03');
+        expect(updated, isNotNull);
+        expect(updated!.accessToken, 'new-access-token-after-select');
+        expect(updated.currentUser.siteId, 'wh-03');
+        expect(updated.currentUser.siteName, 'Kho 3 - Sai Gon');
+      },
+    );
   });
 }
 
@@ -84,6 +110,8 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   int getSessionsCallCount = 0;
   int logoutAllCallCount = 0;
   ChangePasswordRequestDto? lastChangePasswordRequest;
+  String? lastSelectedWarehouseId;
+  SelectWarehouseResponseDto? selectWarehouseResponse;
 
   @override
   Future<void> changePassword(ChangePasswordRequestDto request) async {
@@ -135,7 +163,14 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<SelectWarehouseResponseDto> selectWarehouse({
     required String warehouseId,
   }) {
-    throw UnimplementedError();
+    lastSelectedWarehouseId = warehouseId;
+    return Future<SelectWarehouseResponseDto>.value(
+      selectWarehouseResponse ??
+          const SelectWarehouseResponseDto(
+            selectedWarehouseId: 'wh-default',
+            accessToken: 'token-default',
+          ),
+    );
   }
 }
 

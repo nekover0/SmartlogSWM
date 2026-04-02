@@ -9,6 +9,7 @@ import 'package:smartlog_swm_mobile/core/network/auth_session_invalidation_signa
 import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/warehouse_context_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/permissions_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_admin_page.dart';
@@ -375,6 +376,8 @@ class AppAuthGatePage extends ConsumerWidget {
         authState.hasError &&
         authController.lastOperation == AuthOperation.restore &&
         session == null;
+    final hasWarehouseContext =
+        (session?.currentUser.siteId.trim().isNotEmpty ?? false);
 
     return Scaffold(
       body: isRestoreLoading
@@ -389,6 +392,8 @@ class AppAuthGatePage extends ConsumerWidget {
             )
           : session == null
           ? const LoginPage()
+          : !hasWarehouseContext
+          ? const WarehouseContextPage()
           : const AppLoadingView(message: 'Đang mở không gian làm việc...'),
     );
   }
