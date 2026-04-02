@@ -5,15 +5,19 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/core/config/app_environment.dart';
+import 'package:smartlog_swm_mobile/core/network/auth_session_refresher.dart';
 import 'package:smartlog_swm_mobile/core/network/network_exception.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_provider.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
 
 const String skipAuthorizationHeaderExtraKey = 'skipAuthorizationHeader';
+const String retriedWithRefreshedTokenExtraKey =
+  'retriedWithRefreshedTokenExtraKey';
 
 final dioProvider = Provider<Dio>((Ref<Object?> ref) {
   final baseUrl = ref.watch(apiBaseUrlProvider);
   final secureStorageService = ref.watch(secureStorageServiceProvider);
+  final authSessionRefresher = ref.watch(authSessionRefresherProvider);
 
   final dio = Dio(
     BaseOptions(
@@ -31,7 +35,11 @@ final dioProvider = Provider<Dio>((Ref<Object?> ref) {
 
   dio.interceptors.add(_RequestIdInterceptor());
   dio.interceptors.add(
-    _AuthTokenInterceptor(secureStorageService: secureStorageService),
+    _AuthTokenInterceptor(
+      dio: dio,
+      secureStorageService: secureStorageService,
+      authSessionRefresher: authSessionRefresher,
+    ),
   );
 
   if (kDebugMode) {
@@ -233,10 +241,17 @@ class _RequestIdInterceptor extends Interceptor {
 }
 
 class _AuthTokenInterceptor extends QueuedInterceptor {
-  _AuthTokenInterceptor({required SecureStorageService secureStorageService})
-    : _secureStorageService = secureStorageService;
+  _AuthTokenInterceptor({
+    required Dio dio,
+    required SecureStorageService secureStorageService,
+    required AuthSessionRefresher authSessionRefresher,
+  }) : _dio = dio,
+       _secureStorageService = secureStorageService,
+       _authSessionRefresher = authSessionRefresher;
 
+  final Dio _dio;
   final SecureStorageService _secureStorageService;
+  final AuthSessionRefresher _authSessionRefresher;
 
   @override
   Future<void> onRequest(
@@ -254,5 +269,48 @@ class _AuthTokenInterceptor extends QueuedInterceptor {
     }
 
     handler.next(options);
+  }
+
+  @override
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final statusCode = err.response?.statusCode;
+    final options = err.requestOptions;
+    final skippedAuth = options.extra[skipAuthorizationHeaderExtraKey] == true;
+    final alreadyRetried =
+        options.extra[retriedWithRefreshedTokenExtraKey] == true;
+
+    if (statusCode != HttpStatus.unauthorized || skippedAuth || alreadyRetried) {
+      handler.next(err);
+      return;
+    }
+
+    try {
+      final refreshedAccessToken = await _authSessionRefresher.refreshAccessToken();
+      if (refreshedAccessToken == null || refreshedAccessToken.isEmpty) {
+        handler.next(err);
+        return;
+      }
+
+      final retriedOptions = options.copyWith(
+        headers: <String, dynamic>{
+          ...options.headers,
+          HttpHeaders.authorizationHeader: 'Bearer $refreshedAccessToken',
+        },
+        extra: <String, Object?>{
+          ...options.extra,
+          retriedWithRefreshedTokenExtraKey: true,
+        },
+      );
+
+      final response = await _dio.fetch<Object?>(retriedOptions);
+      handler.resolve(response);
+      return;
+    } catch (_) {
+      handler.next(err);
+      return;
+    }
   }
 }

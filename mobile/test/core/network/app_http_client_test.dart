@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/core/network/app_http_client.dart';
+import 'package:smartlog_swm_mobile/core/network/auth_session_refresher.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_provider.dart';
 import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
@@ -60,6 +61,65 @@ void main() {
         isTrue,
       );
     });
+
+    test('retries once with refreshed token on 401 responses', () async {
+      adapter.enqueueResponse(
+        statusCode: HttpStatus.unauthorized,
+        body:
+            '{"code":"AUTH_REFRESH_EXPIRED","message":"refresh expired"}',
+      );
+      adapter.enqueueResponse(statusCode: HttpStatus.ok, body: '{}');
+
+      final fakeStorage = _FakeSecureStorageService(session: _TestData.session);
+      final fakeRefresher = _FakeAuthSessionRefresher(
+        refreshedToken: 'refreshed-access-token',
+        onRefresh: () {
+          final current = fakeStorage.session;
+          if (current == null) {
+            return;
+          }
+
+          fakeStorage.session = AuthSession(
+            accessToken: 'refreshed-access-token',
+            refreshToken: current.refreshToken,
+            expiresIn: current.expiresIn,
+            sessionId: current.sessionId,
+            tokenType: current.tokenType,
+            currentUser: current.currentUser,
+            loggedInAt: current.loggedInAt,
+            persistedAt: current.persistedAt,
+          );
+        },
+      );
+      final container = ProviderContainer(
+        overrides: [
+          secureStorageServiceProvider.overrideWithValue(fakeStorage),
+          authSessionRefresherProvider.overrideWithValue(fakeRefresher),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final dio = container.read(dioProvider);
+      dio.httpClientAdapter = adapter;
+      final client = DioAppHttpClient(dio: dio);
+
+      await client.getMap('/api/v1/auth/me');
+
+      expect(fakeRefresher.callCount, 1);
+      expect(adapter.requests, hasLength(2));
+      expect(
+        _authorizationHeader(adapter.requests.first.headers),
+        'Bearer access-token-001',
+      );
+      expect(
+        _authorizationHeader(adapter.requests.last.headers),
+        'Bearer refreshed-access-token',
+      );
+      expect(
+        adapter.requests.last.extra[retriedWithRefreshedTokenExtraKey],
+        isTrue,
+      );
+    });
   });
 }
 
@@ -99,7 +159,16 @@ class _FakeSecureStorageService implements SecureStorageService {
 }
 
 class _RecordingHttpClientAdapter implements HttpClientAdapter {
+  final List<_QueuedAdapterResponse> _queuedResponses =
+      <_QueuedAdapterResponse>[];
+  final List<RequestOptions> requests = <RequestOptions>[];
   RequestOptions? lastRequest;
+
+  void enqueueResponse({required int statusCode, required String body}) {
+    _queuedResponses.add(
+      _QueuedAdapterResponse(statusCode: statusCode, body: body),
+    );
+  }
 
   @override
   void close({bool force = false}) {}
@@ -111,14 +180,42 @@ class _RecordingHttpClientAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     lastRequest = options;
+    requests.add(options);
+
+    final queued =
+        _queuedResponses.isNotEmpty
+            ? _queuedResponses.removeAt(0)
+            : const _QueuedAdapterResponse(statusCode: 200, body: '{}');
 
     return ResponseBody.fromString(
-      '{}',
-      200,
+      queued.body,
+      queued.statusCode,
       headers: <String, List<String>>{
         Headers.contentTypeHeader: <String>[Headers.jsonContentType],
       },
     );
+  }
+}
+
+class _QueuedAdapterResponse {
+  const _QueuedAdapterResponse({required this.statusCode, required this.body});
+
+  final int statusCode;
+  final String body;
+}
+
+class _FakeAuthSessionRefresher implements AuthSessionRefresher {
+  _FakeAuthSessionRefresher({required this.refreshedToken, this.onRefresh});
+
+  final String refreshedToken;
+  final void Function()? onRefresh;
+  int callCount = 0;
+
+  @override
+  Future<String?> refreshAccessToken() async {
+    callCount += 1;
+    onRefresh?.call();
+    return refreshedToken;
   }
 }
 
