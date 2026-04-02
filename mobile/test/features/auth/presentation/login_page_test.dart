@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smartlog_swm_mobile/features/auth/data/datasources/auth_fixture_data_source.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
@@ -9,6 +8,7 @@ import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_reposit
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_user.dart';
+import 'package:smartlog_swm_mobile/features/auth/domain/errors/auth_exceptions.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_theme.dart';
@@ -119,6 +119,62 @@ void main() {
       expect(find.text('Sai tên đăng nhập hoặc mật khẩu.'), findsOneWidget);
     });
 
+    testWidgets('shows inline error for inactive account', (
+      WidgetTester tester,
+    ) async {
+      final Finder submitButton = find.byKey(const Key('login_submit_button'));
+
+      repository.loginError = const AccountInactiveException(
+        'Tai khoan da bi vo hieu hoa.',
+      );
+
+      await tester.pumpWidget(buildSubject());
+      await tester.enterText(
+        find.byKey(const Key('login_username_field')),
+        'ops.inactive',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_field')),
+        'smartlog123',
+      );
+      await tester.pump();
+      await tester.ensureVisible(submitButton);
+
+      await tester.tap(submitButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('login_inline_error')), findsOneWidget);
+      expect(find.text('Tai khoan da bi vo hieu hoa.'), findsOneWidget);
+    });
+
+    testWidgets('shows inline error for locked account', (
+      WidgetTester tester,
+    ) async {
+      final Finder submitButton = find.byKey(const Key('login_submit_button'));
+
+      repository.loginError = const AccountLockedException(
+        'Tai khoan dang bi khoa tam thoi.',
+      );
+
+      await tester.pumpWidget(buildSubject());
+      await tester.enterText(
+        find.byKey(const Key('login_username_field')),
+        'ops.locked',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_field')),
+        'smartlog123',
+      );
+      await tester.pump();
+      await tester.ensureVisible(submitButton);
+
+      await tester.tap(submitButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('login_inline_error')), findsOneWidget);
+      expect(find.text('Tai khoan dang bi khoa tam thoi.'), findsOneWidget);
+    });
+
     testWidgets('dispatches successful submit through auth controller', (
       WidgetTester tester,
     ) async {
@@ -153,7 +209,7 @@ void main() {
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  InvalidCredentialsException? loginError;
+  AuthException? loginError;
   LoginRequestDto? lastLoginRequest;
 
   @override

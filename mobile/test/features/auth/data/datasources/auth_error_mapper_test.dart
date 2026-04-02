@@ -19,6 +19,30 @@ void main() {
       expect(mapped, isA<InvalidCredentialsException>());
     });
 
+    test('maps AUTH_ACCOUNT_INACTIVE to AccountInactiveException', () {
+      final mapped = mapper.map(
+        const NetworkResponseException(
+          statusCode: 403,
+          errorCode: 'AUTH_ACCOUNT_INACTIVE',
+          message: 'Account inactive',
+        ),
+      );
+
+      expect(mapped, isA<AccountInactiveException>());
+    });
+
+    test('maps AUTH_ACCOUNT_LOCKED to AccountLockedException', () {
+      final mapped = mapper.map(
+        const NetworkResponseException(
+          statusCode: 423,
+          errorCode: 'AUTH_ACCOUNT_LOCKED',
+          message: 'Account locked',
+        ),
+      );
+
+      expect(mapped, isA<AccountLockedException>());
+    });
+
     test('maps AUTH_REFRESH_REPLAY_DETECTED to replay exception', () {
       final mapped = mapper.map(
         const NetworkResponseException(
@@ -29,6 +53,30 @@ void main() {
       );
 
       expect(mapped, isA<AuthRefreshReplayDetectedException>());
+    });
+
+    test('maps AUTH_REFRESH_EXPIRED to expired exception', () {
+      final mapped = mapper.map(
+        const NetworkResponseException(
+          statusCode: 401,
+          errorCode: 'AUTH_REFRESH_EXPIRED',
+          message: 'Refresh token expired',
+        ),
+      );
+
+      expect(mapped, isA<AuthRefreshExpiredException>());
+    });
+
+    test('maps AUTH_SESSION_REVOKED to session revoked exception', () {
+      final mapped = mapper.map(
+        const NetworkResponseException(
+          statusCode: 401,
+          errorCode: 'AUTH_SESSION_REVOKED',
+          message: 'Session revoked',
+        ),
+      );
+
+      expect(mapped, isA<AuthSessionRevokedException>());
     });
 
     test('maps 401 without business code to unauthorized exception', () {

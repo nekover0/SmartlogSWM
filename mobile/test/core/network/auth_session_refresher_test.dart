@@ -46,31 +46,42 @@ void main() {
       expect(invalidationSignal.version, 0);
     });
 
-    test('clears persisted session for terminal refresh failures', () async {
-      final storage = _FakeSecureStorageService(session: _TestData.session);
-      final invalidationSignal = AuthSessionInvalidationSignal();
-      final adapter = _QueuedHttpClientAdapter()
-        ..enqueueResponse(
-          statusCode: 401,
-          body: '{"code":"AUTH_SESSION_REVOKED","message":"session revoked"}',
-        );
-      final dio = Dio();
-      dio.httpClientAdapter = adapter;
+    for (final terminalCode in const <String>[
+      'AUTH_REFRESH_INVALID',
+      'AUTH_REFRESH_EXPIRED',
+      'AUTH_REFRESH_REPLAY_DETECTED',
+      'AUTH_SESSION_REVOKED',
+    ]) {
+      test(
+        'clears persisted session for terminal refresh failure: $terminalCode',
+        () async {
+          final storage = _FakeSecureStorageService(session: _TestData.session);
+          final invalidationSignal = AuthSessionInvalidationSignal();
+          final adapter = _QueuedHttpClientAdapter()
+            ..enqueueResponse(
+              statusCode: 401,
+              body:
+                  '{"code":"$terminalCode","message":"terminal refresh failure"}',
+            );
+          final dio = Dio();
+          dio.httpClientAdapter = adapter;
 
-      final refresher = DioAuthSessionRefresher(
-        secureStorageService: storage,
-        invalidationSignal: invalidationSignal,
-        dio: dio,
-        clock: () => DateTime.utc(2026, 4, 3, 12, 0),
-      );
+          final refresher = DioAuthSessionRefresher(
+            secureStorageService: storage,
+            invalidationSignal: invalidationSignal,
+            dio: dio,
+            clock: () => DateTime.utc(2026, 4, 3, 12, 0),
+          );
 
-      await expectLater(
-        refresher.refreshAccessToken(),
-        throwsA(isA<NetworkResponseException>()),
+          await expectLater(
+            refresher.refreshAccessToken(),
+            throwsA(isA<NetworkResponseException>()),
+          );
+          expect(storage.session, isNull);
+          expect(invalidationSignal.version, 1);
+        },
       );
-      expect(storage.session, isNull);
-      expect(invalidationSignal.version, 1);
-    });
+    }
   });
 }
 
