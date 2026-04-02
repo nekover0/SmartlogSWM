@@ -15,9 +15,10 @@ class CurrentRole {
     final normalizedRoleName = roleName.trim().isEmpty
         ? 'Customer Viewer'
         : roleName.trim();
+    final roleLabel = RoleGuard.canonicalRoleLabel(normalizedRoleName);
 
     return CurrentRole(
-      name: normalizedRoleName,
+      name: roleLabel,
       showTasksTab: RoleGuard.showsTasksTab(normalizedRoleName),
       showScanFab: RoleGuard.showsScanFab(normalizedRoleName),
     );

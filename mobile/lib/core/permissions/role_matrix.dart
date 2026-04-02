@@ -1,27 +1,33 @@
 enum AppRole {
-  administrator('Administrator'),
-  operationsSupervisor('Operations Supervisor'),
-  warehouseManager('Warehouse Manager'),
-  warehouseKeeper('Warehouse Keeper'),
-  weighbridgeOperator('Weighbridge Operator'),
-  customerViewer('Customer Viewer'),
-  billingOfficer('Billing Officer'),
-  governanceManager('Governance Manager');
+  administrator('Administrator', 'ADMIN'),
+  operationsSupervisor('Operations Supervisor', 'OPERATIONS_SUPERVISOR'),
+  warehouseManager('Warehouse Manager', 'WAREHOUSE_MANAGER'),
+  warehouseKeeper('Warehouse Keeper', 'WAREHOUSE_KEEPER'),
+  weighbridgeOperator('Weighbridge Operator', 'WEIGHBRIDGE_OPERATOR'),
+  customerViewer('Customer Viewer', 'CUSTOMER_VIEWER'),
+  billingOfficer('Billing Officer', 'BILLING_OFFICER'),
+  governanceManager('Governance Manager', 'GOVERNANCE_MANAGER');
 
-  const AppRole(this.label);
+  const AppRole(this.label, this.code);
 
   final String label;
+  final String code;
 
   static AppRole fromName(String value) {
-    final normalizedValue = value.trim();
+    final normalizedValue = _normalizeRoleValue(value);
 
     for (final role in AppRole.values) {
-      if (role.label == normalizedValue) {
+      if (_normalizeRoleValue(role.label) == normalizedValue ||
+          _normalizeRoleValue(role.code) == normalizedValue) {
         return role;
       }
     }
 
     throw ArgumentError.value(value, 'value', 'Unknown app role.');
+  }
+
+  static String _normalizeRoleValue(String value) {
+    return value.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]+'), '_');
   }
 }
 
@@ -163,10 +169,7 @@ abstract final class RoleMatrix {
     return _accessByRole[role]?[module] ?? ModuleAccess.hidden;
   }
 
-  static bool canAccess({
-    required AppRole role,
-    required AppModule module,
-  }) {
+  static bool canAccess({required AppRole role, required AppModule module}) {
     return accessFor(role: role, module: module).canView;
   }
 }
