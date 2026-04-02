@@ -74,6 +74,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/config/
     - assets/fixtures/auth/
     - assets/fixtures/inbound/
     - assets/fixtures/outbound/

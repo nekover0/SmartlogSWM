@@ -46,6 +46,39 @@ flutter pub get
 flutter run
 ```
 
+## API Base URL Configuration
+
+The mobile app uses a centralized API base URL and loads it automatically
+from this file:
+
+- `assets/config/app_environment.json`
+
+Current structure:
+
+```json
+{
+	"apiBaseUrl": "https://swm.ap.ngrok.io"
+}
+```
+
+Default value:
+
+```text
+https://swm.ap.ngrok.io
+```
+
+When the ngrok URL changes, update `apiBaseUrl` in that JSON file and run normally:
+
+```bash
+flutter run
+```
+
+Optional: you can still override from CI/CD with `--dart-define` if needed:
+
+```bash
+flutter build apk --dart-define=API_BASE_URL=https://api.your-domain.com
+```
+
 The default repositories load demo data from `assets/fixtures/`, so no backend is required for slice 1 verification.
 
 ## Vertical Slice 1 Flow
