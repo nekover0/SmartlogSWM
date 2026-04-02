@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -139,6 +141,37 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(LoginRequestDto request) async {
     return restoreSessionResult!;
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    final session = restoreSessionResult;
+    if (session == null) {
+      throw StateError('No session');
+    }
+
+    return AuthProfileDto(
+      id: session.currentUser.id,
+      userCode: session.currentUser.username,
+      username: session.currentUser.username,
+      fullName: session.currentUser.displayName,
+      roleCodes: <String>[session.currentUser.role],
+      selectedWarehouseId: session.currentUser.siteId,
+      warehouseOptions: const [],
+      ownerScope: const <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return const AuthPermissionsSnapshotDto(
+      roleCodes: <String>[],
+      permissions: <String>[],
+      warehouseScope: <String>[],
+      ownerScope: <String>[],
+    );
   }
 
   @override

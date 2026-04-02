@@ -7,6 +7,7 @@ import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_sna
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_refresh_response_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_session_summary_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_warehouse_option_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/change_password_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_response_dto.dart';
@@ -134,6 +135,62 @@ void main() {
       expect(restored, isNull);
     });
 
+    test('syncs profile from auth/me into persisted session', () async {
+      final seededSession = AuthSession(
+        accessToken: 'persisted-token',
+        refreshToken: 'refresh-token',
+        currentUser: _TestData.user,
+        loggedInAt: _TestData.loggedInAt,
+        persistedAt: _TestData.persistedAt,
+      );
+      await secureStorageService.saveSession(seededSession);
+
+      remoteDataSource.meResponse = const AuthProfileDto(
+        id: 'user-001',
+        userCode: 'keeper',
+        username: 'warehouse.keeper',
+        fullName: 'Warehouse Keeper Synced',
+        email: 'keeper@smartlog.local',
+        roleCodes: <String>['WAREHOUSE_KEEPER'],
+        selectedWarehouseId: 'wh-01',
+        warehouseOptions: <AuthWarehouseOptionDto>[
+          AuthWarehouseOptionDto(
+            id: 'wh-01',
+            code: 'WH5.1',
+            name: 'Kho 5.1 - Phu My',
+          ),
+        ],
+        ownerScope: <String>[],
+        channel: 'MOBILE',
+        mustChangePassword: false,
+      );
+
+      final profile = await repository.getMe();
+
+      expect(profile.fullName, 'Warehouse Keeper Synced');
+      final restored = await secureStorageService.getSession();
+      expect(restored, isNotNull);
+      expect(restored!.currentUser.role, 'Warehouse Keeper');
+      expect(restored.currentUser.siteId, 'wh-01');
+      expect(restored.currentUser.siteName, 'Kho 5.1 - Phu My');
+      expect(restored.currentUser.displayName, 'Warehouse Keeper Synced');
+      expect(restored.accessToken, 'persisted-token');
+    });
+
+    test('loads permissions snapshot from remote datasource', () async {
+      remoteDataSource.permissionsResponse = const AuthPermissionsSnapshotDto(
+        roleCodes: <String>['ADMIN'],
+        permissions: <String>['foundation.roles.view'],
+        warehouseScope: <String>['WH5.1'],
+        ownerScope: <String>[],
+      );
+
+      final snapshot = await repository.getMyPermissions();
+
+      expect(snapshot.roleCodes, <String>['ADMIN']);
+      expect(snapshot.permissions, <String>['foundation.roles.view']);
+    });
+
     test('restores saved session and clears it on logout', () async {
       final session = AuthSession(
         accessToken: 'persisted-token',
@@ -203,6 +260,8 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   LoginRequestDto? lastLoginRequest;
   LoginResponseDto? loginResponse;
   Object? loginError;
+  AuthProfileDto? meResponse;
+  AuthPermissionsSnapshotDto? permissionsResponse;
 
   @override
   Future<LoginResponseDto> login(LoginRequestDto request) async {
@@ -236,12 +295,34 @@ class _FakeAuthRemoteDataSource implements AuthRemoteDataSource {
 
   @override
   Future<AuthProfileDto> getMe() {
-    throw UnimplementedError();
+    return Future<AuthProfileDto>.value(
+      meResponse ??
+          const AuthProfileDto(
+            id: 'user-default',
+            userCode: 'default',
+            username: 'default.user',
+            fullName: 'Default User',
+            roleCodes: <String>['CUSTOMER_VIEWER'],
+            selectedWarehouseId: null,
+            warehouseOptions: <AuthWarehouseOptionDto>[],
+            ownerScope: <String>[],
+            channel: 'MOBILE',
+            mustChangePassword: false,
+          ),
+    );
   }
 
   @override
   Future<AuthPermissionsSnapshotDto> getMyPermissions() {
-    throw UnimplementedError();
+    return Future<AuthPermissionsSnapshotDto>.value(
+      permissionsResponse ??
+          const AuthPermissionsSnapshotDto(
+            roleCodes: <String>['CUSTOMER_VIEWER'],
+            permissions: <String>[],
+            warehouseScope: <String>[],
+            ownerScope: <String>[],
+          ),
+    );
   }
 
   @override

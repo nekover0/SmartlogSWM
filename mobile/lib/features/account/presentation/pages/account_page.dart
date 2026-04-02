@@ -5,6 +5,7 @@ import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
 import 'package:smartlog_swm_mobile/core/permissions/role_matrix.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -14,10 +15,33 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
+    final profileState = ref.watch(authMeProvider);
     final shellState = ref.watch(appShellControllerProvider);
     final session = authState.valueOrNull;
+    final profile = profileState.valueOrNull;
 
-    final activeRole = _tryParseRole(shellState.currentRole.label);
+    final roleLabel = _resolveRoleLabel(
+      roleCodes: profile?.roleCodes,
+      fallbackRole: shellState.currentRole.label,
+    );
+    final siteLabel = _resolveSiteLabel(
+      profile: profile,
+      fallbackSiteLabel: shellState.currentSite.label,
+    );
+    final displayName = _resolveDisplayName(
+      profile: profile,
+      fallbackDisplayName: shellState.displayName,
+    );
+    final userId = _resolveUserId(
+      profile: profile,
+      fallbackUserId: session?.currentUser.id,
+    );
+    final username = _resolveUsername(
+      profile: profile,
+      fallbackUsername: session?.currentUser.username,
+    );
+
+    final activeRole = _tryParseRole(roleLabel);
     final adminAccess = _accessFor(activeRole, AppModule.admin);
     final permissionGroups = _buildPermissionGroups(activeRole);
 
@@ -54,14 +78,14 @@ class AccountPage extends ConsumerWidget {
         ),
         children: [
           _ProfileHeaderCard(
-            displayName: shellState.displayName,
-            roleLabel: shellState.currentRole.label,
-            siteLabel: shellState.currentSite.label,
-            userId: session?.currentUser.id ?? 'N/A',
-            username: session?.currentUser.username,
+            displayName: displayName,
+            roleLabel: roleLabel,
+            siteLabel: siteLabel,
+            userId: userId,
+            username: username,
           ),
           const SizedBox(height: AppSpacing.md),
-          _RoleSummaryCard(roleLabel: shellState.currentRole.label),
+          _RoleSummaryCard(roleLabel: roleLabel),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             key: Key('account_permissions_heading'),
@@ -166,6 +190,87 @@ class AccountPage extends ConsumerWidget {
       return ModuleAccess.hidden;
     }
     return RoleMatrix.accessFor(role: role, module: module);
+  }
+
+  String _resolveDisplayName({
+    required AuthProfileDto? profile,
+    required String fallbackDisplayName,
+  }) {
+    final profileName = profile?.fullName.trim() ?? '';
+    if (profileName.isNotEmpty) {
+      return profileName;
+    }
+
+    return fallbackDisplayName;
+  }
+
+  String _resolveUserId({
+    required AuthProfileDto? profile,
+    required String? fallbackUserId,
+  }) {
+    final profileId = profile?.id.trim() ?? '';
+    if (profileId.isNotEmpty) {
+      return profileId;
+    }
+
+    final fallbackId = fallbackUserId?.trim() ?? '';
+    return fallbackId.isNotEmpty ? fallbackId : 'N/A';
+  }
+
+  String? _resolveUsername({
+    required AuthProfileDto? profile,
+    required String? fallbackUsername,
+  }) {
+    final profileUsername = profile?.username.trim() ?? '';
+    if (profileUsername.isNotEmpty) {
+      return profileUsername;
+    }
+
+    final fallback = fallbackUsername?.trim() ?? '';
+    return fallback.isNotEmpty ? fallback : null;
+  }
+
+  String _resolveRoleLabel({
+    required List<String>? roleCodes,
+    required String fallbackRole,
+  }) {
+    for (final roleCode in roleCodes ?? const <String>[]) {
+      if (roleCode.trim().isEmpty) {
+        continue;
+      }
+
+      try {
+        return AppRole.fromName(roleCode).label;
+      } catch (_) {
+        continue;
+      }
+    }
+
+    try {
+      return AppRole.fromName(fallbackRole).label;
+    } catch (_) {
+      return fallbackRole;
+    }
+  }
+
+  String _resolveSiteLabel({
+    required AuthProfileDto? profile,
+    required String fallbackSiteLabel,
+  }) {
+    if (profile == null || profile.warehouseOptions.isEmpty) {
+      return fallbackSiteLabel;
+    }
+
+    final selectedWarehouseId = profile.selectedWarehouseId?.trim();
+    if (selectedWarehouseId != null && selectedWarehouseId.isNotEmpty) {
+      for (final option in profile.warehouseOptions) {
+        if (option.id == selectedWarehouseId) {
+          return option.name;
+        }
+      }
+    }
+
+    return profile.warehouseOptions.first.name;
   }
 
   List<_PermissionGroupData> _buildPermissionGroups(AppRole? role) {

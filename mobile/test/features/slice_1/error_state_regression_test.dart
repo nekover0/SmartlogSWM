@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/router/app_router.dart';
 import 'package:smartlog_swm_mobile/core/permissions/permission_service.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -59,7 +61,10 @@ void main() {
     await settleUi(tester);
 
     expect(find.text('Không có task phù hợp'), findsOneWidget);
-    expect(find.text('Chưa có task nào đang mở trong ca hiện tại.'), findsOneWidget);
+    expect(
+      find.text('Chưa có task nào đang mở trong ca hiện tại.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('receipt list shows no-result empty state after search misses', (
@@ -104,7 +109,9 @@ void main() {
 
     expect(find.text('Không tìm thấy phiếu nhập'), findsOneWidget);
     expect(
-      find.text('Phiếu nhập này không còn tồn tại hoặc bạn cần tải lại queue inbound.'),
+      find.text(
+        'Phiếu nhập này không còn tồn tại hoặc bạn cần tải lại queue inbound.',
+      ),
       findsOneWidget,
     );
   });
@@ -186,10 +193,7 @@ class _RouterHarness {
   Widget build() {
     return UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(
-        routerConfig: router,
-        theme: AppTheme.light(),
-      ),
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
   }
 
@@ -207,10 +211,7 @@ Widget _buildReceiptListSubject({
       authRepositoryProvider.overrideWithValue(authRepository),
       receiptRepositoryProvider.overrideWithValue(receiptRepository),
     ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      home: const ReceiptListPage(),
-    ),
+    child: MaterialApp(theme: AppTheme.light(), home: const ReceiptListPage()),
   );
 }
 
@@ -231,13 +232,9 @@ Widget _buildReceiptDetailSubject({
   );
 }
 
-Widget _buildScanSubject({
-  required PermissionService permissionService,
-}) {
+Widget _buildScanSubject({required PermissionService permissionService}) {
   return ProviderScope(
-    overrides: [
-      permissionServiceProvider.overrideWithValue(permissionService),
-    ],
+    overrides: [permissionServiceProvider.overrideWithValue(permissionService)],
     child: MaterialApp(
       theme: AppTheme.light(),
       home: const BarcodeScanPage(
@@ -274,7 +271,9 @@ class _StaticReceiptRepository implements ReceiptRepository {
 
   @override
   Future<ReceiptEntity> getReceiptById(String receiptId) async {
-    return (await getReceipts()).firstWhere((receipt) => receipt.id == receiptId);
+    return (await getReceipts()).firstWhere(
+      (receipt) => receipt.id == receiptId,
+    );
   }
 }
 
@@ -321,10 +320,7 @@ ReceiptEntity _buildReceipt({
       code: 'BDG-WH-02',
       name: 'Binh Duong Overflow Warehouse',
     ),
-    vehicle: VehicleInfo(
-      plateNumber: plateNumber,
-      driverName: 'Driver $id',
-    ),
+    vehicle: VehicleInfo(plateNumber: plateNumber, driverName: 'Driver $id'),
     purchaseOrderNo: 'PO-$id',
     billOfLadingNo: 'BL-$id',
     expectedWeightKg: 18250,
@@ -353,6 +349,32 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(LoginRequestDto request) async {
     return _session;
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    return AuthProfileDto(
+      id: _session.currentUser.id,
+      userCode: _session.currentUser.username,
+      username: _session.currentUser.username,
+      fullName: _session.currentUser.displayName,
+      roleCodes: <String>[_session.currentUser.role],
+      selectedWarehouseId: _session.currentUser.siteId,
+      warehouseOptions: const [],
+      ownerScope: const <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return AuthPermissionsSnapshotDto(
+      roleCodes: <String>[_session.currentUser.role],
+      permissions: const <String>[],
+      warehouseScope: const <String>[],
+      ownerScope: const <String>[],
+    );
   }
 
   @override

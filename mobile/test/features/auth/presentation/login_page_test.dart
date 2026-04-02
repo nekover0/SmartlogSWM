@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/datasources/auth_fixture_data_source.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -188,6 +190,32 @@ class _FakeAuthRepository implements AuthRepository {
       ),
       loggedInAt: DateTime.utc(2026, 3, 23, 9),
       persistedAt: DateTime.utc(2026, 3, 23, 9),
+    );
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    return const AuthProfileDto(
+      id: 'user-ops-001',
+      userCode: 'ops.supervisor',
+      username: 'ops.supervisor',
+      fullName: 'Operations Supervisor',
+      roleCodes: <String>['OPERATIONS_SUPERVISOR'],
+      selectedWarehouseId: 'sgn-dc-01',
+      warehouseOptions: [],
+      ownerScope: <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return const AuthPermissionsSnapshotDto(
+      roleCodes: <String>['OPERATIONS_SUPERVISOR'],
+      permissions: <String>[],
+      warehouseScope: <String>[],
+      ownerScope: <String>[],
     );
   }
 

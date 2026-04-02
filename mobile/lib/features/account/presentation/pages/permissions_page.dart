@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
-import 'package:smartlog_swm_mobile/core/permissions/role_guard.dart';
+import 'package:smartlog_swm_mobile/core/permissions/permission_snapshot_mapper.dart';
 import 'package:smartlog_swm_mobile/core/permissions/role_matrix.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -15,24 +16,36 @@ class PermissionsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
+    final permissionsState = ref.watch(authPermissionsSnapshotProvider);
     final shellState = ref.watch(appShellControllerProvider);
     final session = authState.valueOrNull;
-    final roleName = shellState.currentRole.label;
+    final permissionsSnapshot = permissionsState.valueOrNull;
+    final roleName = _resolvePrimaryRoleLabel(
+      permissionsSnapshot: permissionsSnapshot,
+      fallbackRole: shellState.currentRole.label,
+    );
     final role = _parseRole(roleName);
+
+    final snapshotAccessByModule = permissionsSnapshot == null
+        ? const <AppModule, ModuleAccess>{}
+        : PermissionSnapshotMapper.toModuleAccess(
+            roleCodes: permissionsSnapshot.roleCodes,
+            permissions: permissionsSnapshot.permissions,
+          );
 
     final permissionRows = AppModule.values
         .map((module) {
           return _PermissionRowData(
             moduleLabel: _moduleLabel(module),
-            access: _accessFor(role, module),
+            access: snapshotAccessByModule[module] ?? _accessFor(role, module),
           );
         })
         .toList(growable: false);
 
-    final canAccessAdmin = RoleGuard.canAccessModule(
-      roleName: roleName,
-      module: AppModule.admin,
-    );
+    final canAccessAdmin =
+        (snapshotAccessByModule[AppModule.admin] ??
+                _accessFor(role, AppModule.admin))
+            .canView;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,6 +107,25 @@ class PermissionsPage extends ConsumerWidget {
     } catch (_) {
       return null;
     }
+  }
+
+  String _resolvePrimaryRoleLabel({
+    required AuthPermissionsSnapshotDto? permissionsSnapshot,
+    required String fallbackRole,
+  }) {
+    for (final roleCode in permissionsSnapshot?.roleCodes ?? const <String>[]) {
+      if (roleCode.trim().isEmpty) {
+        continue;
+      }
+
+      try {
+        return AppRole.fromName(roleCode).label;
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return fallbackRole;
   }
 
   ModuleAccess _accessFor(AppRole? role, AppModule module) {

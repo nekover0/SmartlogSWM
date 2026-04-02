@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -38,14 +40,11 @@ void main() {
     test('sorts critical work first, then by urgency and age', () async {
       final state = await container.read(taskQueueControllerProvider.future);
 
-      expect(
-        state.visibleItems.map((item) => item.id).toList(),
-        <String>[
-          'task-receipt-critical-001',
-          'task-ocr-review-001',
-          'task-receipt-normal-001',
-        ],
-      );
+      expect(state.visibleItems.map((item) => item.id).toList(), <String>[
+        'task-receipt-critical-001',
+        'task-ocr-review-001',
+        'task-receipt-normal-001',
+      ]);
     });
 
     test('filters by severity and type independently', () async {
@@ -124,9 +123,7 @@ class _FakeTaskRepository implements TaskRepository {
         sourceEntityId: 'rcp-20260323-001',
         sourceEntityNo: 'RCP-240323-001',
         routeName: 'receipt_detail',
-        routeParams: const <String, String>{
-          'receiptId': 'rcp-20260323-001',
-        },
+        routeParams: const <String, String>{'receiptId': 'rcp-20260323-001'},
         ageMinutes: 95,
         dueAt: DateTime.utc(2026, 3, 24, 8, 15),
         createdAt: DateTime.utc(2026, 3, 24, 6, 40),
@@ -197,6 +194,32 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(LoginRequestDto request) async {
     return _session;
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    return AuthProfileDto(
+      id: _session.currentUser.id,
+      userCode: _session.currentUser.username,
+      username: _session.currentUser.username,
+      fullName: _session.currentUser.displayName,
+      roleCodes: <String>[_session.currentUser.role],
+      selectedWarehouseId: _session.currentUser.siteId,
+      warehouseOptions: const [],
+      ownerScope: const <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return AuthPermissionsSnapshotDto(
+      roleCodes: <String>[_session.currentUser.role],
+      permissions: const <String>[],
+      warehouseScope: const <String>[],
+      ownerScope: const <String>[],
+    );
   }
 
   @override
