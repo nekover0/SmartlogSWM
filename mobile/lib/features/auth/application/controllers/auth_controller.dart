@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -12,6 +14,27 @@ final authSampleAccountsProvider = FutureProvider<List<AuthSampleAccount>>((
 ) {
   return ref.watch(authRepositoryProvider).getSampleAccounts();
 });
+
+final authMeProvider = FutureProvider<AuthProfileDto?>((
+  Ref<Object?> ref,
+) async {
+  final session = ref.watch(authControllerProvider).valueOrNull;
+  if (session == null) {
+    return null;
+  }
+
+  return ref.watch(authRepositoryProvider).getMe();
+});
+
+final authPermissionsSnapshotProvider =
+    FutureProvider<AuthPermissionsSnapshotDto?>((Ref<Object?> ref) async {
+      final session = ref.watch(authControllerProvider).valueOrNull;
+      if (session == null) {
+        return null;
+      }
+
+      return ref.watch(authRepositoryProvider).getMyPermissions();
+    });
 
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthSession?>(AuthController.new);

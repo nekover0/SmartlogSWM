@@ -3,18 +3,11 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_response_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/domain/errors/auth_exceptions.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
 
-class InvalidCredentialsException implements Exception {
-  const InvalidCredentialsException([
-    this.message = 'Invalid username or password.',
-  ]);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
+export 'package:smartlog_swm_mobile/features/auth/domain/errors/auth_exceptions.dart'
+    show InvalidCredentialsException;
 
 class AuthFixtureDataSource {
   AuthFixtureDataSource({

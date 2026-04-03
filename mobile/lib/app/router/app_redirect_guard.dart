@@ -27,9 +27,26 @@ String? resolveAppRedirectTarget({
         : AppRoutePaths.login;
   }
 
+  final hasWarehouseContext = session.currentUser.siteId.trim().isNotEmpty;
   final roleName = session.currentUser.role;
   if (normalizedLocation == AppRoutePaths.login) {
-    return RoleGuard.defaultLandingPathForRoleName(roleName);
+    if (!hasWarehouseContext) {
+      return null;
+    }
+
+    return AppRoutePaths.authBootstrap;
+  }
+
+  if (normalizedLocation == AppRoutePaths.authBootstrap) {
+    if (!hasWarehouseContext) {
+      return AppRoutePaths.login;
+    }
+
+    return null;
+  }
+
+  if (!hasWarehouseContext) {
+    return AppRoutePaths.login;
   }
 
   if (!RoleGuard.canAccessLocation(

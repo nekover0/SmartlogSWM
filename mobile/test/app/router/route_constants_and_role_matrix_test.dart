@@ -67,6 +67,15 @@ void main() {
         ModuleAccess.full,
       );
     });
+
+    test('parses backend role codes into app roles', () {
+      expect(AppRole.fromName('WAREHOUSE_KEEPER'), AppRole.warehouseKeeper);
+      expect(AppRole.fromName('admin'), AppRole.administrator);
+      expect(
+        AppRole.fromName('operations supervisor'),
+        AppRole.operationsSupervisor,
+      );
+    });
   });
 
   group('RoleGuard', () {
@@ -124,6 +133,24 @@ void main() {
       expect(RoleGuard.showsTasksTab('Customer Viewer'), isFalse);
       expect(RoleGuard.showsScanFab('Warehouse Keeper'), isTrue);
       expect(RoleGuard.showsScanFab('Governance Manager'), isFalse);
+    });
+
+    test('accepts role codes for landing and access checks', () {
+      expect(
+        RoleGuard.defaultLandingPathForRoleName('WEIGHBRIDGE_OPERATOR'),
+        AppRoutePaths.tasksPath(type: 'weighing'),
+      );
+      expect(
+        RoleGuard.canAccessLocation(
+          roleName: 'CUSTOMER_VIEWER',
+          location: AppRoutePaths.scanBarcode,
+        ),
+        isFalse,
+      );
+      expect(
+        RoleGuard.canonicalRoleLabel('WAREHOUSE_KEEPER'),
+        'Warehouse Keeper',
+      );
     });
   });
 }

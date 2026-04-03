@@ -19,10 +19,7 @@ abstract final class RoleGuard {
     required String roleName,
     required AppModule module,
   }) {
-    return RoleMatrix.accessFor(
-      role: AppRole.fromName(roleName),
-      module: module,
-    );
+    return RoleMatrix.accessFor(role: _resolveRole(roleName), module: module);
   }
 
   static bool canAccessModule({
@@ -40,7 +37,7 @@ abstract final class RoleGuard {
   }
 
   static String defaultLandingPathForRoleName(String roleName) {
-    return defaultLandingPathForRole(AppRole.fromName(roleName));
+    return defaultLandingPathForRole(_resolveRole(roleName));
   }
 
   static String defaultLandingPathForRole(AppRole role) {
@@ -65,7 +62,7 @@ abstract final class RoleGuard {
   }
 
   static String firstAllowedShellPathForRoleName(String roleName) {
-    return firstAllowedShellPathForRole(AppRole.fromName(roleName));
+    return firstAllowedShellPathForRole(_resolveRole(roleName));
   }
 
   static String firstAllowedShellPathForRole(AppRole role) {
@@ -83,9 +80,13 @@ abstract final class RoleGuard {
     required String location,
   }) {
     return canAccessLocationForRole(
-      role: AppRole.fromName(roleName),
+      role: _resolveRole(roleName),
       location: location,
     );
+  }
+
+  static String canonicalRoleLabel(String roleName) {
+    return _resolveRole(roleName).label;
   }
 
   static bool canAccessLocationForRole({
@@ -177,5 +178,13 @@ abstract final class RoleGuard {
     final uri = Uri.parse(location);
     final normalizedPath = uri.path.trim();
     return normalizedPath.isEmpty ? '/' : normalizedPath;
+  }
+
+  static AppRole _resolveRole(String roleName) {
+    try {
+      return AppRole.fromName(roleName);
+    } catch (_) {
+      return AppRole.customerViewer;
+    }
   }
 }

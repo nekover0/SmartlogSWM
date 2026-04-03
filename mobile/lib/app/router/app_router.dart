@@ -5,14 +5,17 @@ import 'package:smartlog_swm_mobile/app/router/app_redirect_guard.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_names.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/router/app_shell_route.dart';
+import 'package:smartlog_swm_mobile/core/network/auth_session_invalidation_signal.dart';
 import 'package:smartlog_swm_mobile/app/shell/presentation/pages/notifications_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/warehouse_context_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/permissions_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/user_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/post_login_bootstrap_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
@@ -46,6 +49,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ) {
     refreshNotifier.markNeedsRefresh();
   });
+  ref.listen<AuthSessionInvalidationSignal>(
+    authSessionInvalidationSignalProvider,
+    (
+      AuthSessionInvalidationSignal? previous,
+      AuthSessionInvalidationSignal next,
+    ) {
+      ref.read(authControllerProvider.notifier).restoreSession();
+      refreshNotifier.markNeedsRefresh();
+    },
+  );
 
   return GoRouter(
     initialLocation: AppRoutePaths.login,
@@ -67,6 +80,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRouteNames.login,
         builder: (BuildContext context, GoRouterState state) {
           return const AppAuthGatePage();
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.authBootstrap,
+        name: AppRouteNames.authBootstrap,
+        builder: (BuildContext context, GoRouterState state) {
+          return const PostLoginBootstrapPage();
         },
       ),
       buildAppShellRoute(),
@@ -364,6 +384,8 @@ class AppAuthGatePage extends ConsumerWidget {
         authState.hasError &&
         authController.lastOperation == AuthOperation.restore &&
         session == null;
+    final hasWarehouseContext =
+        (session?.currentUser.siteId.trim().isNotEmpty ?? false);
 
     return Scaffold(
       body: isRestoreLoading
@@ -378,7 +400,9 @@ class AppAuthGatePage extends ConsumerWidget {
             )
           : session == null
           ? const LoginPage()
-          : const AppLoadingView(message: 'Đang mở không gian làm việc...'),
+          : !hasWarehouseContext
+          ? const WarehouseContextPage()
+          : const PostLoginBootstrapPage(),
     );
   }
 }

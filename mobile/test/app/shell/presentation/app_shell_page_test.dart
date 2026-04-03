@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -131,6 +133,32 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(LoginRequestDto request) async {
     return _buildSession(request.username, request.password);
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    return AuthProfileDto(
+      id: 'user-1',
+      userCode: 'ops.supervisor',
+      username: 'ops.supervisor',
+      fullName: displayName,
+      roleCodes: <String>[role],
+      selectedWarehouseId: 'site-1',
+      warehouseOptions: const [],
+      ownerScope: const <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return AuthPermissionsSnapshotDto(
+      roleCodes: <String>[role],
+      permissions: const <String>[],
+      warehouseScope: const <String>[],
+      ownerScope: const <String>[],
+    );
   }
 
   @override

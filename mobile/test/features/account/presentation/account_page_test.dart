@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/account_page.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_permissions_snapshot_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_profile_dto.dart';
+import 'package:smartlog_swm_mobile/features/auth/data/dtos/auth_warehouse_option_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/dtos/login_request_dto.dart';
 import 'package:smartlog_swm_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
@@ -91,14 +94,59 @@ void main() {
 
       expect(manageButton.onPressed, isNotNull);
     });
+
+    testWidgets('renders API profile data and role-code mapping', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAccountPage(
+        tester,
+        session: _buildSession(role: 'Customer Viewer'),
+        profileResult: const AuthProfileDto(
+          id: 'admin-001',
+          userCode: 'admin',
+          username: 'admin',
+          fullName: 'System Admin',
+          roleCodes: <String>['ADMIN'],
+          selectedWarehouseId: 'wh-01',
+          warehouseOptions: <AuthWarehouseOptionDto>[
+            AuthWarehouseOptionDto(
+              id: 'wh-01',
+              code: 'WH5.1',
+              name: 'Kho 5.1 - Phu My',
+            ),
+          ],
+          ownerScope: <String>[],
+          channel: 'MOBILE',
+          mustChangePassword: false,
+        ),
+      );
+
+      expect(find.text('System Admin'), findsOneWidget);
+      expect(find.text('Administrator'), findsWidgets);
+      expect(find.text('Kho 5.1 - Phu My'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('account_manage_users_roles_button')),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      final manageButton = tester.widget<FilledButton>(
+        find.byKey(const Key('account_manage_users_roles_button')),
+      );
+      expect(manageButton.onPressed, isNotNull);
+    });
   });
 }
 
 Future<void> _pumpAccountPage(
   WidgetTester tester, {
   required AuthSession session,
+  AuthProfileDto? profileResult,
 }) async {
-  final repository = _FakeAuthRepository(restoreSessionResult: session);
+  final repository = _FakeAuthRepository(
+    restoreSessionResult: session,
+    profileResult: profileResult,
+  );
 
   await tester.pumpWidget(
     ProviderScope(
@@ -127,9 +175,10 @@ AuthSession _buildSession({required String role}) {
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({required this.restoreSessionResult});
+  _FakeAuthRepository({required this.restoreSessionResult, this.profileResult});
 
   final AuthSession? restoreSessionResult;
+  final AuthProfileDto? profileResult;
 
   @override
   Future<List<AuthSampleAccount>> getSampleAccounts() async {
@@ -139,6 +188,42 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(LoginRequestDto request) async {
     return restoreSessionResult!;
+  }
+
+  @override
+  Future<AuthProfileDto> getMe() async {
+    final session = restoreSessionResult;
+    if (session == null) {
+      throw StateError('No session');
+    }
+
+    final configuredProfile = profileResult;
+    if (configuredProfile != null) {
+      return configuredProfile;
+    }
+
+    return AuthProfileDto(
+      id: session.currentUser.id,
+      userCode: session.currentUser.username,
+      username: session.currentUser.username,
+      fullName: session.currentUser.displayName,
+      roleCodes: <String>[session.currentUser.role],
+      selectedWarehouseId: session.currentUser.siteId,
+      warehouseOptions: const [],
+      ownerScope: const <String>[],
+      channel: 'MOBILE',
+      mustChangePassword: false,
+    );
+  }
+
+  @override
+  Future<AuthPermissionsSnapshotDto> getMyPermissions() async {
+    return const AuthPermissionsSnapshotDto(
+      roleCodes: <String>[],
+      permissions: <String>[],
+      warehouseScope: <String>[],
+      ownerScope: <String>[],
+    );
   }
 
   @override
