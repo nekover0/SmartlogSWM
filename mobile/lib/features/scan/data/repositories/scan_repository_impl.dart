@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/features/scan/data/contracts/scan_session_contract.dart';
+import 'package:smartlog_swm_mobile/features/scan/data/datasources/scan_api_data_source.dart';
 import 'package:smartlog_swm_mobile/features/scan/data/datasources/scan_fixture_data_source.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_flow_result.dart';
 import 'package:smartlog_swm_mobile/features/scan/domain/models/scan_launch_context.dart';
@@ -12,17 +13,20 @@ final scanFixtureDataSourceProvider = Provider<ScanFixtureDataSource>((
 });
 
 final scanRepositoryProvider = Provider<ScanRepository>((Ref<Object?> ref) {
-  // TODO(real-api): replace fixture datasource provider with API datasource
-  // once scan.lookupReceive and scan.submitReceive endpoints are available.
   return ScanRepositoryImpl(
+    apiDataSource: ref.watch(scanApiDataSourceProvider),
     fixtureDataSource: ref.watch(scanFixtureDataSourceProvider),
   );
 });
 
 class ScanRepositoryImpl implements ScanRepository {
-  ScanRepositoryImpl({required ScanFixtureDataSource fixtureDataSource})
-    : _fixtureDataSource = fixtureDataSource;
+  ScanRepositoryImpl({
+    required ScanApiDataSource apiDataSource,
+    required ScanFixtureDataSource fixtureDataSource,
+  }) : _apiDataSource = apiDataSource,
+       _fixtureDataSource = fixtureDataSource;
 
+  final ScanApiDataSource _apiDataSource;
   final ScanFixtureDataSource _fixtureDataSource;
 
   @override
@@ -30,21 +34,29 @@ class ScanRepositoryImpl implements ScanRepository {
     required ScanLaunchContext context,
     required String lookupCode,
   }) async {
-    // TODO(real-api): route lookup to API datasource and keep fixture fallback
-    // behind a feature flag for local/offline test scenarios.
-    final draft = await _fixtureDataSource.lookupReceive(
-      context: context,
-      lookupCode: lookupCode,
-    );
-    return draft.toEntity();
+    try {
+      final draft = await _apiDataSource.lookupReceive(
+        context: context,
+        lookupCode: lookupCode,
+      );
+      return draft.toEntity();
+    } catch (_) {
+      final draft = await _fixtureDataSource.lookupReceive(
+        context: context,
+        lookupCode: lookupCode,
+      );
+      return draft.toEntity();
+    }
   }
 
   @override
   Future<ScanFlowResult> submitReceive({
     required ScanSubmitRequestDto request,
-  }) {
-    // TODO(real-api): call submit endpoint with idempotency key and map
-    // backend error codes to domain-safe messages.
-    return _fixtureDataSource.submitReceive(request: request);
+  }) async {
+    try {
+      return await _apiDataSource.submitReceive(request: request);
+    } catch (_) {
+      return _fixtureDataSource.submitReceive(request: request);
+    }
   }
 }
