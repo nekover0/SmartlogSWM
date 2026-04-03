@@ -127,6 +127,20 @@ String? _extractErrorCode(Object? data) {
     return null;
   }
 
+  final nestedErrorBody = _extractResponseBody(body['error']);
+  final nestedErrorCode = _extractCodeFromMap(nestedErrorBody);
+  if (nestedErrorCode != null) {
+    return nestedErrorCode;
+  }
+
+  return _extractCodeFromMap(body);
+}
+
+String? _extractCodeFromMap(Map<String, dynamic>? body) {
+  if (body == null) {
+    return null;
+  }
+
   for (final key in const <String>[
     'code',
     'errorCode',
@@ -149,6 +163,31 @@ String _extractErrorMessage({
 }) {
   final body = _extractResponseBody(data);
   if (body != null) {
+    final nestedErrorBody = _extractResponseBody(body['error']);
+    final nestedErrorMessage = _extractMessageFromMap(nestedErrorBody);
+    if (nestedErrorMessage != null) {
+      return nestedErrorMessage;
+    }
+
+    final rootMessage = _extractMessageFromMap(body);
+    if (rootMessage != null) {
+      return rootMessage;
+    }
+
+    final dataMessage = _extractMessageFromMap(
+      _extractResponseBody(body['data']),
+    );
+    if (dataMessage != null) {
+      return dataMessage;
+    }
+
+    final nestedMetaMessage = _extractMessageFromMap(
+      _extractResponseBody(body['meta']),
+    );
+    if (nestedMetaMessage != null) {
+      return nestedMetaMessage;
+    }
+
     for (final key in const <String>['message', 'detail', 'errorMessage']) {
       final value = body[key];
       if (value is String && value.trim().isNotEmpty) {
@@ -166,6 +205,21 @@ String _extractErrorMessage({
   }
 
   return fallback;
+}
+
+String? _extractMessageFromMap(Map<String, dynamic>? body) {
+  if (body == null) {
+    return null;
+  }
+
+  for (final key in const <String>['message', 'detail', 'errorMessage']) {
+    final value = body[key];
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+  }
+
+  return null;
 }
 
 Map<String, dynamic>? _extractResponseBody(Object? data) {

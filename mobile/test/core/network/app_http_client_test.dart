@@ -22,7 +22,9 @@ void main() {
     test('injects Authorization header when auth is required', () async {
       final fakeStorage = _FakeSecureStorageService(session: _TestData.session);
       final container = ProviderContainer(
-        overrides: [secureStorageServiceProvider.overrideWithValue(fakeStorage)],
+        overrides: [
+          secureStorageServiceProvider.overrideWithValue(fakeStorage),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -41,7 +43,9 @@ void main() {
     test('skips Authorization header when requiresAuth is false', () async {
       final fakeStorage = _FakeSecureStorageService(session: _TestData.session);
       final container = ProviderContainer(
-        overrides: [secureStorageServiceProvider.overrideWithValue(fakeStorage)],
+        overrides: [
+          secureStorageServiceProvider.overrideWithValue(fakeStorage),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -62,11 +66,57 @@ void main() {
       );
     });
 
+    test('unwraps map payload from success envelope', () async {
+      adapter.enqueueResponse(
+        statusCode: HttpStatus.ok,
+        body: '{"success":true,"data":{"id":"user-001","name":"Admin"}}',
+      );
+
+      final fakeStorage = _FakeSecureStorageService(session: _TestData.session);
+      final container = ProviderContainer(
+        overrides: [
+          secureStorageServiceProvider.overrideWithValue(fakeStorage),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final dio = container.read(dioProvider);
+      dio.httpClientAdapter = adapter;
+      final client = DioAppHttpClient(dio: dio);
+
+      final result = await client.getMap('/api/v1/auth/me');
+      expect(result['id'], 'user-001');
+      expect(result['name'], 'Admin');
+    });
+
+    test('unwraps list payload from success envelope', () async {
+      adapter.enqueueResponse(
+        statusCode: HttpStatus.ok,
+        body:
+            '{"success":true,"data":[{"id":"session-001","channel":"MOBILE"}]}',
+      );
+
+      final fakeStorage = _FakeSecureStorageService(session: _TestData.session);
+      final container = ProviderContainer(
+        overrides: [
+          secureStorageServiceProvider.overrideWithValue(fakeStorage),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final dio = container.read(dioProvider);
+      dio.httpClientAdapter = adapter;
+      final client = DioAppHttpClient(dio: dio);
+
+      final result = await client.getList('/api/v1/auth/sessions');
+      expect(result, hasLength(1));
+      expect((result.first as Map)['id'], 'session-001');
+    });
+
     test('retries once with refreshed token on 401 responses', () async {
       adapter.enqueueResponse(
         statusCode: HttpStatus.unauthorized,
-        body:
-            '{"code":"AUTH_REFRESH_EXPIRED","message":"refresh expired"}',
+        body: '{"code":"AUTH_REFRESH_EXPIRED","message":"refresh expired"}',
       );
       adapter.enqueueResponse(statusCode: HttpStatus.ok, body: '{}');
 
@@ -182,10 +232,9 @@ class _RecordingHttpClientAdapter implements HttpClientAdapter {
     lastRequest = options;
     requests.add(options);
 
-    final queued =
-        _queuedResponses.isNotEmpty
-            ? _queuedResponses.removeAt(0)
-            : const _QueuedAdapterResponse(statusCode: 200, body: '{}');
+    final queued = _queuedResponses.isNotEmpty
+        ? _queuedResponses.removeAt(0)
+        : const _QueuedAdapterResponse(statusCode: 200, body: '{}');
 
     return ResponseBody.fromString(
       queued.body,

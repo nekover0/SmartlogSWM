@@ -21,7 +21,7 @@ void main() {
           )..enqueueResponse(
             statusCode: 200,
             body:
-                '{"accessToken":"new-access-token","refreshToken":"new-refresh-token","expiresIn":900,"sessionId":"session-002"}',
+                '{"success":true,"data":{"accessToken":"new-access-token","refreshToken":"new-refresh-token","expiresIn":900,"sessionId":"session-002"}}',
           );
       final dio = Dio();
       dio.httpClientAdapter = adapter;
@@ -61,7 +61,7 @@ void main() {
             ..enqueueResponse(
               statusCode: 401,
               body:
-                  '{"code":"$terminalCode","message":"terminal refresh failure"}',
+                  '{"success":false,"error":{"code":"$terminalCode","message":"terminal refresh failure"}}',
             );
           final dio = Dio();
           dio.httpClientAdapter = adapter;

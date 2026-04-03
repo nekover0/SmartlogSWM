@@ -12,7 +12,7 @@ import 'package:smartlog_swm_mobile/core/storage/secure_storage_service.dart';
 
 const String skipAuthorizationHeaderExtraKey = 'skipAuthorizationHeader';
 const String retriedWithRefreshedTokenExtraKey =
-  'retriedWithRefreshedTokenExtraKey';
+    'retriedWithRefreshedTokenExtraKey';
 
 final dioProvider = Provider<Dio>((Ref<Object?> ref) {
   final baseUrl = ref.watch(apiBaseUrlProvider);
@@ -132,7 +132,7 @@ class DioAppHttpClient implements AppHttpClient {
         options: _resolveOptions(options, requiresAuth: requiresAuth),
       );
 
-      final data = response.data;
+      final data = _extractPayloadData(response.data);
       if (data is List<dynamic>) {
         return data;
       }
@@ -192,16 +192,17 @@ class DioAppHttpClient implements AppHttpClient {
   }
 
   Map<String, dynamic> _asMap(Object? data, {required String path}) {
-    if (data == null) {
+    final normalized = _extractPayloadData(data);
+    if (normalized == null) {
       return <String, dynamic>{};
     }
 
-    if (data is Map<String, dynamic>) {
-      return data;
+    if (normalized is Map<String, dynamic>) {
+      return normalized;
     }
 
-    if (data is Map) {
-      return data.map(
+    if (normalized is Map) {
+      return normalized.map(
         (Object? key, Object? value) => MapEntry(key?.toString() ?? '', value),
       );
     }
@@ -209,6 +210,30 @@ class DioAppHttpClient implements AppHttpClient {
     throw NetworkUnexpectedException(
       message: 'Expected an object response from $path.',
     );
+  }
+
+  Object? _extractPayloadData(Object? data) {
+    if (data is! Map) {
+      return data;
+    }
+
+    final map = data is Map<String, dynamic>
+        ? data
+        : data.map(
+            (Object? key, Object? value) =>
+                MapEntry(key?.toString() ?? '', value),
+          );
+
+    final isEnvelope =
+        map.containsKey('success') ||
+        map.containsKey('meta') ||
+        map.containsKey('error');
+
+    if (!map.containsKey('data') || !isEnvelope) {
+      return data;
+    }
+
+    return map['data'];
   }
 
   Options _resolveOptions(Options? options, {required bool requiresAuth}) {
@@ -282,13 +307,16 @@ class _AuthTokenInterceptor extends QueuedInterceptor {
     final alreadyRetried =
         options.extra[retriedWithRefreshedTokenExtraKey] == true;
 
-    if (statusCode != HttpStatus.unauthorized || skippedAuth || alreadyRetried) {
+    if (statusCode != HttpStatus.unauthorized ||
+        skippedAuth ||
+        alreadyRetried) {
       handler.next(err);
       return;
     }
 
     try {
-      final refreshedAccessToken = await _authSessionRefresher.refreshAccessToken();
+      final refreshedAccessToken = await _authSessionRefresher
+          .refreshAccessToken();
       if (refreshedAccessToken == null || refreshedAccessToken.isEmpty) {
         handler.next(err);
         return;

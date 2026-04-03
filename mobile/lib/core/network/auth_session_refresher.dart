@@ -89,7 +89,7 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
         data: <String, dynamic>{'refreshToken': refreshToken},
       );
 
-      final payload = _asMap(response.data);
+      final payload = _asMap(_extractPayloadData(response.data));
       final updatedAccessToken = (payload['accessToken'] as String? ?? '')
           .trim();
       if (updatedAccessToken.isEmpty) {
@@ -125,6 +125,10 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
   }
 
   Map<String, dynamic> _asMap(Object? data) {
+    if (data == null) {
+      return <String, dynamic>{};
+    }
+
     if (data is Map<String, dynamic>) {
       return data;
     }
@@ -138,22 +142,45 @@ class DioAuthSessionRefresher implements AuthSessionRefresher {
     return <String, dynamic>{};
   }
 
-  String? _extractBusinessCode(Object? data) {
+  Object? _extractPayloadData(Object? data) {
     final body = _asMap(data);
-
-    for (final key in const <String>[
-      'code',
-      'errorCode',
-      'error_code',
-      'error',
-    ]) {
-      final value = body[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
-      }
+    final isEnvelope =
+        body.containsKey('success') ||
+        body.containsKey('meta') ||
+        body.containsKey('error');
+    if (isEnvelope && body.containsKey('data')) {
+      return body['data'];
     }
 
-    return null;
+    return data;
+  }
+
+  String? _extractBusinessCode(Object? data) {
+    final body = _asMap(data);
+    final errorBody = _asMap(body['error']);
+
+    String? tryExtractCode(Map<String, dynamic> source) {
+      for (final key in const <String>[
+        'code',
+        'errorCode',
+        'error_code',
+        'error',
+      ]) {
+        final value = source[key];
+        if (value is String && value.trim().isNotEmpty) {
+          return value.trim();
+        }
+      }
+
+      return null;
+    }
+
+    final nestedCode = tryExtractCode(errorBody);
+    if (nestedCode != null) {
+      return nestedCode;
+    }
+
+    return tryExtractCode(body);
   }
 
   bool _isTerminalRefreshFailureCode(String? code) {
