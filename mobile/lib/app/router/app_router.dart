@@ -15,6 +15,7 @@ import 'package:smartlog_swm_mobile/features/account/presentation/pages/permissi
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/user_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
+import 'package:smartlog_swm_mobile/features/auth/presentation/pages/post_login_bootstrap_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
@@ -79,6 +80,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRouteNames.login,
         builder: (BuildContext context, GoRouterState state) {
           return const AppAuthGatePage();
+        },
+      ),
+      GoRoute(
+        path: AppRoutePaths.authBootstrap,
+        name: AppRouteNames.authBootstrap,
+        builder: (BuildContext context, GoRouterState state) {
+          return const PostLoginBootstrapPage();
         },
       ),
       buildAppShellRoute(),
@@ -394,7 +402,7 @@ class AppAuthGatePage extends ConsumerWidget {
           ? const LoginPage()
           : !hasWarehouseContext
           ? const WarehouseContextPage()
-          : const AppLoadingView(message: 'Đang mở không gian làm việc...'),
+          : const PostLoginBootstrapPage(),
     );
   }
 }

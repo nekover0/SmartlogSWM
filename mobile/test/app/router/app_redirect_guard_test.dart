@@ -49,7 +49,7 @@ void main() {
     expect(result, isNull);
   });
 
-  test('sends authenticated users away from login to default landing', () {
+  test('sends authenticated users from login to auth bootstrap', () {
     final session = buildSession(role: 'Weighbridge Operator');
     final result = resolveAppRedirectTarget(
       location: AppRoutePaths.login,
@@ -57,7 +57,18 @@ void main() {
       lastOperation: AuthOperation.login,
     );
 
-    expect(result, AppRoutePaths.tasksPath(type: 'weighing'));
+    expect(result, AppRoutePaths.authBootstrap);
+  });
+
+  test('keeps authenticated users on auth bootstrap route', () {
+    final session = buildSession(role: 'Warehouse Keeper');
+    final result = resolveAppRedirectTarget(
+      location: AppRoutePaths.authBootstrap,
+      authState: AsyncData<AuthSession?>(session),
+      lastOperation: AuthOperation.login,
+    );
+
+    expect(result, isNull);
   });
 
   test('keeps allowed routes and falls back from unknown routes', () {

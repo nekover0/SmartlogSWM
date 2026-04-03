@@ -1,5 +1,6 @@
 abstract final class AppRoutePaths {
   static const login = '/login';
+  static const authBootstrap = '/auth/bootstrap';
 
   static const home = '/home';
   static const tasks = '/tasks';
@@ -45,8 +46,10 @@ abstract final class AppRoutePaths {
       return tasks;
     }
 
-    return Uri(path: tasks, queryParameters: <String, String>{'type': type})
-        .toString();
+    return Uri(
+      path: tasks,
+      queryParameters: <String, String>{'type': type},
+    ).toString();
   }
 
   static String inventoryDetailPath(String inventoryId) =>
@@ -55,7 +58,8 @@ abstract final class AppRoutePaths {
   static String inventoryControlFlowPath(String mode) =>
       '$inventoryControl/$mode';
 
-  static String receiptDetailPath(String receiptId) => '$receiptList/$receiptId';
+  static String receiptDetailPath(String receiptId) =>
+      '$receiptList/$receiptId';
 
   static String shipmentDetailPath(String shipmentId) =>
       '$shipmentList/$shipmentId';

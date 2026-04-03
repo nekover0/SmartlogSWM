@@ -34,7 +34,15 @@ String? resolveAppRedirectTarget({
       return null;
     }
 
-    return RoleGuard.defaultLandingPathForRoleName(roleName);
+    return AppRoutePaths.authBootstrap;
+  }
+
+  if (normalizedLocation == AppRoutePaths.authBootstrap) {
+    if (!hasWarehouseContext) {
+      return AppRoutePaths.login;
+    }
+
+    return null;
   }
 
   if (!hasWarehouseContext) {

@@ -1,5 +1,6 @@
 abstract final class AppRouteNames {
   static const login = 'login';
+  static const authBootstrap = 'auth_bootstrap';
 
   static const home = 'home';
   static const tasks = 'tasks';
