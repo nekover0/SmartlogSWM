@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -10,14 +9,12 @@ class LoginForm extends StatefulWidget {
     required this.onSubmit,
     required this.onForgotPassword,
     this.errorMessage,
-    this.selectedSampleAccount,
   });
 
   final bool isSubmitting;
   final Future<void> Function(String username, String password) onSubmit;
   final VoidCallback onForgotPassword;
   final String? errorMessage;
-  final AuthSampleAccount? selectedSampleAccount;
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -42,21 +39,6 @@ class _LoginFormState extends State<LoginForm> {
     _passwordFocusNode = FocusNode();
     _usernameController.addListener(_handleFieldChanged);
     _passwordController.addListener(_handleFieldChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant LoginForm oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    final selectedSampleAccount = widget.selectedSampleAccount;
-    if (selectedSampleAccount == null ||
-        selectedSampleAccount == oldWidget.selectedSampleAccount) {
-      return;
-    }
-
-    _usernameController.text = selectedSampleAccount.username;
-    _passwordController.text = selectedSampleAccount.password;
-    _passwordFocusNode.requestFocus();
   }
 
   @override
