@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
 import 'package:smartlog_swm_mobile/app/shell/presentation/widgets/scan_action_sheet.dart';
+import 'package:smartlog_swm_mobile/features/home/application/providers/home_dashboard_provider.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -13,6 +15,9 @@ class HomeDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shellState = ref.watch(appShellControllerProvider);
+    final dashboardState = ref.watch(homeDashboardSnapshotProvider);
+    final snapshot =
+        dashboardState.valueOrNull ?? HomeDashboardSnapshot.fallback();
     final displayName = shellState.displayName.trim();
     final firstName = displayName.isEmpty
         ? 'Marcus'
@@ -32,7 +37,7 @@ class HomeDashboardPage extends ConsumerWidget {
           siteLabel: shellState.currentSite.label,
         ),
         const SizedBox(height: AppSpacing.lg),
-        _KpiSection(cardWidth: cardWidth),
+        _KpiSection(cardWidth: cardWidth, snapshot: snapshot),
         const SizedBox(height: AppSpacing.lg),
         _SectionHeading(title: 'Hành động nhanh'),
         const SizedBox(height: AppSpacing.sm),
@@ -69,9 +74,10 @@ class HomeDashboardPage extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         _SectionHeading(title: 'Cảnh báo hệ thống'),
         const SizedBox(height: AppSpacing.sm),
-        const _AlertsSection(),
+        _AlertsSection(alerts: snapshot.alerts),
         const SizedBox(height: AppSpacing.lg),
         _RecentActivitySection(
+          activities: snapshot.recentActivities,
           onViewAll: () => context.go(AppRoutePaths.tasks),
         ),
       ],
@@ -163,35 +169,38 @@ class _SectionHeading extends StatelessWidget {
 }
 
 class _KpiSection extends StatelessWidget {
-  const _KpiSection({required this.cardWidth});
+  const _KpiSection({required this.cardWidth, required this.snapshot});
 
   final double cardWidth;
+  final HomeDashboardSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
+    final formatter = NumberFormat.decimalPattern('en_US');
+
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
-      children: const [
+      children: [
         _KpiCard(
           label: 'Đơn hôm nay',
-          value: '1,284',
+          value: formatter.format(snapshot.ordersToday),
           icon: Icons.receipt_long_rounded,
         ),
         _KpiCard(
           label: 'Chờ xử lý',
-          value: '42',
+          value: formatter.format(snapshot.pendingTasks),
           icon: Icons.pending_actions_rounded,
         ),
         _KpiCard(
           label: 'Tồn thấp',
-          value: '07',
+          value: snapshot.lowStockCount.toString().padLeft(2, '0'),
           icon: Icons.warning_amber_rounded,
           isWarning: true,
         ),
         _KpiCard(
           label: 'Tồn kho',
-          value: '45,820',
+          value: formatter.format(snapshot.totalInventoryQty),
           icon: Icons.inventory_2_rounded,
           isPrimary: true,
         ),
@@ -348,24 +357,25 @@ class _QuickActionButton extends StatelessWidget {
 }
 
 class _AlertsSection extends StatelessWidget {
-  const _AlertsSection();
+  const _AlertsSection({required this.alerts});
+
+  final List<HomeAlertEntry> alerts;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        _AlertCard(
-          title: 'Low Stock: Thermal Sensor',
-          subtitle: 'Zone B-4 reached critical level',
-          leadingIcon: Icons.warning_amber_rounded,
-          isWarning: true,
-        ),
-        SizedBox(height: AppSpacing.xs),
-        _AlertCard(
-          title: 'Pending Approval',
-          subtitle: '3 inbound manifests need signature',
-          leadingIcon: Icons.pending_actions_rounded,
-        ),
+        for (var index = 0; index < alerts.length; index++) ...[
+          _AlertCard(
+            title: alerts[index].title,
+            subtitle: alerts[index].subtitle,
+            leadingIcon: alerts[index].isWarning
+                ? Icons.warning_amber_rounded
+                : Icons.pending_actions_rounded,
+            isWarning: alerts[index].isWarning,
+          ),
+          if (index < alerts.length - 1) const SizedBox(height: AppSpacing.xs),
+        ],
       ],
     );
   }
@@ -442,9 +452,13 @@ class _AlertCard extends StatelessWidget {
 }
 
 class _RecentActivitySection extends StatelessWidget {
-  const _RecentActivitySection({required this.onViewAll});
+  const _RecentActivitySection({
+    required this.onViewAll,
+    required this.activities,
+  });
 
   final VoidCallback onViewAll;
+  final List<HomeActivityEntry> activities;
 
   @override
   Widget build(BuildContext context) {
@@ -458,20 +472,19 @@ class _RecentActivitySection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        const _ActivityCard(
-          title: 'Nhập kho thành công',
-          time: '12:45 PM',
-          detail: 'Batch #774921 - Industrial Pumps (24 units)',
-          badge: 'Khu vực A-4',
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        const _ActivityCard(
-          title: 'Xuất kho hoàn tất',
-          time: '10:05 AM',
-          detail: 'Carrier: FedEx Express - Manifest #M-9022',
-          badge: 'Hoàn thành',
-          completed: true,
-        ),
+        for (var index = 0; index < activities.length; index++) ...[
+          _ActivityCard(
+            title: activities[index].title,
+            time: DateFormat(
+              'hh:mm a',
+            ).format(activities[index].occurredAt.toLocal()),
+            detail: activities[index].detail,
+            badge: activities[index].badge,
+            completed: activities[index].completed,
+          ),
+          if (index < activities.length - 1)
+            const SizedBox(height: AppSpacing.xs),
+        ],
       ],
     );
   }
