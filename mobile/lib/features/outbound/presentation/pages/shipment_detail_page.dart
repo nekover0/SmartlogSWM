@@ -191,8 +191,8 @@ class ShipmentDetailPage extends ConsumerWidget {
 
   bool _isMissingShipment(Object? error) {
     final message = '$error'.toLowerCase();
-    return message.contains('fixture not found') ||
-        message.contains('shipment fixture not found') ||
+    return message.contains('not found') ||
+        message.contains('statuscode: 404') ||
         message.contains('bad state: no element');
   }
 
