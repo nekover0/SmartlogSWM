@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
 import 'package:smartlog_swm_mobile/app/shell/application/controllers/app_shell_controller.dart';
+import 'package:smartlog_swm_mobile/features/inventory/application/providers/inventory_providers.dart';
+import 'package:smartlog_swm_mobile/features/inventory/domain/models/inventory_models.dart';
+import 'package:smartlog_swm_mobile/features/tasks/application/controllers/task_queue_controller.dart';
+import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -72,9 +76,7 @@ class _NotificationsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Expanded(
-                child: _NotificationsContent(onOpenRoute: onOpenRoute),
-              ),
+              Expanded(child: _NotificationsContent(onOpenRoute: onOpenRoute)),
             ],
           ),
         ),
@@ -91,6 +93,33 @@ class _NotificationsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shellState = ref.watch(appShellControllerProvider);
+    final taskQueueState = ref.watch(taskQueueControllerProvider).valueOrNull;
+    final inventoryItems =
+        ref.watch(inventoryListProvider).valueOrNull ??
+        const <InventoryItemEntity>[];
+
+    final lowStockCount = inventoryItems
+        .where((item) => item.isLowStock)
+        .length;
+
+    final pendingTaskCount = taskQueueState?.pendingTaskCount ?? 0;
+    final ocrTaskCount =
+        taskQueueState?.pendingItems
+            .where((item) => item.type == TaskItemType.ocr)
+            .length ??
+        0;
+    final shipmentTaskCount =
+        taskQueueState?.pendingItems
+            .where((item) => item.type == TaskItemType.shipment)
+            .length ??
+        0;
+
+    final entries = _buildNotificationEntries(
+      lowStockCount: lowStockCount,
+      pendingTaskCount: pendingTaskCount,
+      ocrTaskCount: ocrTaskCount,
+      shipmentTaskCount: shipmentTaskCount,
+    );
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -98,10 +127,10 @@ class _NotificationsContent extends ConsumerWidget {
         _HeaderCard(
           siteName: shellState.currentSite.label,
           roleName: shellState.currentRole.label,
-          notificationCount: shellState.badgeCounts.notifications,
+          notificationCount: entries.length,
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._notificationEntries.map(
+        ...entries.map(
           (entry) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: _NotificationCard(
@@ -113,10 +142,7 @@ class _NotificationsContent extends ConsumerWidget {
       ],
     );
 
-    return ListView(
-      padding: AppSpacing.pagePadding,
-      children: [content],
-    );
+    return ListView(padding: AppSpacing.pagePadding, children: [content]);
   }
 }
 
@@ -195,10 +221,7 @@ class _HeaderCard extends StatelessWidget {
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({
-    required this.entry,
-    required this.onTap,
-  });
+  const _NotificationCard({required this.entry, required this.onTap});
 
   final _NotificationEntry entry;
   final VoidCallback onTap;
@@ -271,33 +294,74 @@ class _NotificationEntry {
   final String route;
 }
 
-const List<_NotificationEntry> _notificationEntries = <_NotificationEntry>[
-  _NotificationEntry(
-    title: 'Cảnh báo tồn thấp',
-    message: '12 SKU đang xuống dưới ngưỡng an toàn tại kho SGN-DC-01.',
-    icon: Icons.inventory_2_outlined,
-    accent: AppColors.warning,
-    route: AppRoutePaths.inventory,
-  ),
-  _NotificationEntry(
-    title: 'Phiếu chờ cân',
-    message: '2 phiếu nhập cần được xử lý trong hàng đợi công việc.',
-    icon: Icons.scale_outlined,
-    accent: AppColors.info,
-    route: '/tasks?type=weighing',
-  ),
-  _NotificationEntry(
-    title: 'OCR cần xem xét',
-    message: '3 chứng từ mới vừa được chuyển sang hàng đợi OCR.',
-    icon: Icons.document_scanner_outlined,
-    accent: AppColors.brandAccent,
-    route: AppRoutePaths.ocrInbox,
-  ),
-  _NotificationEntry(
-    title: 'Phiếu xuất chờ xử lý',
-    message: '1 phiếu xuất vẫn đang chờ xác nhận trước khi đóng gói.',
-    icon: Icons.local_shipping_outlined,
-    accent: AppColors.success,
-    route: AppRoutePaths.shipmentList,
-  ),
-];
+List<_NotificationEntry> _buildNotificationEntries({
+  required int lowStockCount,
+  required int pendingTaskCount,
+  required int ocrTaskCount,
+  required int shipmentTaskCount,
+}) {
+  final entries = <_NotificationEntry>[];
+
+  if (lowStockCount > 0) {
+    entries.add(
+      _NotificationEntry(
+        title: 'Cảnh báo tồn thấp',
+        message:
+            '$lowStockCount SKU đang xuống dưới ngưỡng an toàn, cần xử lý sớm.',
+        icon: Icons.inventory_2_outlined,
+        accent: AppColors.warning,
+        route: AppRoutePaths.inventory,
+      ),
+    );
+  }
+
+  if (pendingTaskCount > 0) {
+    entries.add(
+      _NotificationEntry(
+        title: 'Công việc đang chờ',
+        message: '$pendingTaskCount công việc đang nằm trong hàng đợi.',
+        icon: Icons.pending_actions_rounded,
+        accent: AppColors.info,
+        route: AppRoutePaths.tasks,
+      ),
+    );
+  }
+
+  if (ocrTaskCount > 0) {
+    entries.add(
+      _NotificationEntry(
+        title: 'OCR cần xem xét',
+        message: '$ocrTaskCount chứng từ OCR cần xác nhận.',
+        icon: Icons.document_scanner_outlined,
+        accent: AppColors.brandAccent,
+        route: AppRoutePaths.ocrInbox,
+      ),
+    );
+  }
+
+  if (shipmentTaskCount > 0) {
+    entries.add(
+      _NotificationEntry(
+        title: 'Phiếu xuất chờ xử lý',
+        message: '$shipmentTaskCount phiếu xuất đang chờ xác nhận.',
+        icon: Icons.local_shipping_outlined,
+        accent: AppColors.success,
+        route: AppRoutePaths.shipmentList,
+      ),
+    );
+  }
+
+  if (entries.isEmpty) {
+    entries.add(
+      const _NotificationEntry(
+        title: 'Không có cảnh báo mới',
+        message: 'Mọi luồng đang ổn định trong ca hiện tại.',
+        icon: Icons.notifications_none_rounded,
+        accent: AppColors.info,
+        route: AppRoutePaths.tasks,
+      ),
+    );
+  }
+
+  return entries;
+}
