@@ -6,6 +6,7 @@ import 'package:smartlog_swm_mobile/features/inventory/domain/models/inventory_m
 import 'package:smartlog_swm_mobile/features/outbound/data/contracts/shipment_contract.dart';
 import 'package:smartlog_swm_mobile/features/outbound/data/repositories/shipment_repository_impl.dart';
 import 'package:smartlog_swm_mobile/features/tasks/application/controllers/task_queue_controller.dart';
+import 'package:smartlog_swm_mobile/shared/contracts/shared_contracts.dart';
 
 final homeDashboardSnapshotProvider = FutureProvider<HomeDashboardSnapshot>((
   Ref<Object?> ref,
