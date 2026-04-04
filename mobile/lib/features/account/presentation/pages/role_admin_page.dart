@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
-import 'package:smartlog_swm_mobile/core/permissions/role_matrix.dart';
+import 'package:smartlog_swm_mobile/features/account/application/providers/account_admin_providers.dart';
+import 'package:smartlog_swm_mobile/features/account/domain/models/account_admin_models.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
-class RoleAdminPage extends StatelessWidget {
+class RoleAdminPage extends ConsumerWidget {
   const RoleAdminPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final roleRows = _buildRoleRows();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rolesState = ref.watch(accountAdminRolesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,124 +41,134 @@ class RoleAdminPage extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: AppSpacing.pagePadding,
-        children: [
-          Card(
-            child: Padding(
-              padding: AppSpacing.cardPadding,
-              child: Text(
-                'Role matrix',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      body: rolesState.when(
+        loading: () => const AppLoadingView(message: 'Dang tai vai tro...'),
+        error: (Object error, StackTrace stackTrace) {
+          return AppErrorState(
+            title: 'Khong tai duoc danh sach vai tro',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(accountAdminRolesProvider),
+          );
+        },
+        data: (List<AccountAdminRoleEntity> roles) {
+          return ListView(
+            padding: AppSpacing.pagePadding,
+            children: [
+              Card(
+                child: Padding(
+                  padding: AppSpacing.cardPadding,
+                  child: Text(
+                    'Danh sach vai tro (${roles.length})',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...roleRows.map(
-            (roleRow) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _RoleCard(roleRow: roleRow),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add_moderator_outlined),
-            label: const Text('Tạo role mới'),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
-            onPressed: () {
-              context.go(AppRoutePaths.permissions);
-            },
-            icon: const Icon(Icons.rule_outlined),
-            label: const Text('Xem phân quyền hiện tại'),
-          ),
-        ],
+              const SizedBox(height: AppSpacing.md),
+              if (roles.isEmpty)
+                const Card(
+                  child: Padding(
+                    padding: AppSpacing.cardPadding,
+                    child: Text('Chua co vai tro nao trong he thong.'),
+                  ),
+                )
+              else
+                ...roles.map(
+                  (role) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _RoleCard(role: role),
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.sm),
+              FilledButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add_moderator_outlined),
+                label: const Text('Tao role moi'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () {
+                  context.go(AppRoutePaths.permissions);
+                },
+                icon: const Icon(Icons.rule_outlined),
+                label: const Text('Xem phan quyen hien tai'),
+              ),
+            ],
+          );
+        },
       ),
     );
-  }
-
-  List<_RoleRow> _buildRoleRows() {
-    return AppRole.values
-        .map((role) {
-          final moduleAccess = <_ModuleAccessInfo>[];
-          for (final module in AppModule.values) {
-            final access = RoleMatrix.accessFor(role: role, module: module);
-            moduleAccess.add(
-              _ModuleAccessInfo(
-                moduleLabel: _moduleLabel(module),
-                access: access,
-              ),
-            );
-          }
-
-          return _RoleRow(roleLabel: role.label, moduleAccess: moduleAccess);
-        })
-        .toList(growable: false);
-  }
-
-  String _moduleLabel(AppModule module) {
-    return switch (module) {
-      AppModule.home => 'Home',
-      AppModule.tasks => 'Tasks',
-      AppModule.scan => 'Scan',
-      AppModule.inventory => 'Inventory',
-      AppModule.inbound => 'Inbound',
-      AppModule.outbound => 'Outbound',
-      AppModule.ocr => 'OCR',
-      AppModule.inventoryControl => 'Inventory Control',
-      AppModule.reports => 'Reports',
-      AppModule.account => 'Account',
-      AppModule.admin => 'Admin',
-    };
   }
 }
 
 class _RoleCard extends StatelessWidget {
-  const _RoleCard({required this.roleRow});
+  const _RoleCard({required this.role});
 
-  final _RoleRow roleRow;
+  final AccountAdminRoleEntity role;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: Key('role_admin_card_${role.id}'),
       child: Padding(
         padding: AppSpacing.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    roleRow.roleLabel,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        role.roleName,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        role.roleCode,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Sửa'),
-                ),
+                const SizedBox(width: AppSpacing.sm),
+                _RoleStatusBadge(isActive: role.isActive),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: roleRow.moduleAccess
-                  .map((moduleInfo) {
-                    return _ModuleAccessPill(
-                      moduleLabel: moduleInfo.moduleLabel,
-                      access: moduleInfo.access,
-                    );
-                  })
-                  .toList(growable: false),
+            Text(
+              role.description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            if (role.permissionCodes.isEmpty)
+              const _PermissionPill(permissionCode: 'Chua co permission')
+            else
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: role.permissionCodes
+                    .take(8)
+                    .map(
+                      (permissionCode) =>
+                          _PermissionPill(permissionCode: permissionCode),
+                    )
+                    .toList(growable: false),
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            OutlinedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Sua'),
             ),
           ],
         ),
@@ -163,25 +177,42 @@ class _RoleCard extends StatelessWidget {
   }
 }
 
-class _ModuleAccessPill extends StatelessWidget {
-  const _ModuleAccessPill({required this.moduleLabel, required this.access});
+class _PermissionPill extends StatelessWidget {
+  const _PermissionPill({required this.permissionCode});
 
-  final String moduleLabel;
-  final ModuleAccess access;
+  final String permissionCode;
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (access) {
-      ModuleAccess.full => AppColors.success,
-      ModuleAccess.readOnly => AppColors.warning,
-      ModuleAccess.hidden => AppColors.textSecondary,
-    };
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.brand.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        permissionCode,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppColors.brand,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
 
-    final accessLabel = switch (access) {
-      ModuleAccess.full => 'full',
-      ModuleAccess.readOnly => 'read',
-      ModuleAccess.hidden => 'hidden',
-    };
+class _RoleStatusBadge extends StatelessWidget {
+  const _RoleStatusBadge({required this.isActive});
+
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? AppColors.success : AppColors.danger;
+    final label = isActive ? 'Active' : 'Inactive';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -193,7 +224,7 @@ class _ModuleAccessPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        '$moduleLabel:$accessLabel',
+        label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,
@@ -201,18 +232,4 @@ class _ModuleAccessPill extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RoleRow {
-  const _RoleRow({required this.roleLabel, required this.moduleAccess});
-
-  final String roleLabel;
-  final List<_ModuleAccessInfo> moduleAccess;
-}
-
-class _ModuleAccessInfo {
-  const _ModuleAccessInfo({required this.moduleLabel, required this.access});
-
-  final String moduleLabel;
-  final ModuleAccess access;
 }

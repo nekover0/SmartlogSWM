@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
-import 'package:smartlog_swm_mobile/core/permissions/role_matrix.dart';
+import 'package:smartlog_swm_mobile/features/account/application/providers/account_admin_providers.dart';
+import 'package:smartlog_swm_mobile/features/account/domain/models/account_admin_models.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
-class UserAdminPage extends StatelessWidget {
+class UserAdminPage extends ConsumerWidget {
   const UserAdminPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final users = _demoUsers;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersState = ref.watch(accountAdminUsersProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,50 +41,81 @@ class UserAdminPage extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: AppSpacing.pagePadding,
-        children: [
-          Card(
-            child: Padding(
-              padding: AppSpacing.cardPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bộ lọc nhanh',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: const [
-                      _FilterChip(label: 'Đang hoạt động', selected: true),
-                      _FilterChip(label: 'Tạm khóa'),
-                      _FilterChip(label: 'Warehouse'),
-                      _FilterChip(label: 'Admin'),
+      body: usersState.when(
+        loading: () => const AppLoadingView(message: 'Dang tai nguoi dung...'),
+        error: (Object error, StackTrace stackTrace) {
+          return AppErrorState(
+            title: 'Khong tai duoc danh sach nguoi dung',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(accountAdminUsersProvider),
+          );
+        },
+        data: (List<AccountAdminUserEntity> users) {
+          final activeCount = users.where((user) => user.active).length;
+          final inactiveCount = users.length - activeCount;
+          final adminCount = users
+              .where(
+                (user) =>
+                    user.roleCode.toUpperCase().contains('ADMIN') ||
+                    user.roleLabel.toUpperCase().contains('ADMIN'),
+              )
+              .length;
+
+          return ListView(
+            padding: AppSpacing.pagePadding,
+            children: [
+              Card(
+                child: Padding(
+                  padding: AppSpacing.cardPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bo loc nhanh',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          _FilterChip(
+                            label: 'Dang hoat dong ($activeCount)',
+                            selected: true,
+                          ),
+                          _FilterChip(label: 'Tam khoa ($inactiveCount)'),
+                          _FilterChip(label: 'Admin ($adminCount)'),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...users.map(
-            (user) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _UserCard(user: user),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: const Text('Thêm người dùng mới'),
-          ),
-        ],
+              const SizedBox(height: AppSpacing.md),
+              if (users.isEmpty)
+                const Card(
+                  child: Padding(
+                    padding: AppSpacing.cardPadding,
+                    child: Text('Chua co nguoi dung nao trong he thong.'),
+                  ),
+                )
+              else
+                ...users.map(
+                  (user) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _UserCard(user: user),
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.sm),
+              FilledButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.person_add_alt_1_rounded),
+                label: const Text('Them nguoi dung moi'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -89,11 +124,12 @@ class UserAdminPage extends StatelessWidget {
 class _UserCard extends StatelessWidget {
   const _UserCard({required this.user});
 
-  final _UserData user;
+  final AccountAdminUserEntity user;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: Key('user_admin_card_${user.id}'),
       child: Padding(
         padding: AppSpacing.cardPadding,
         child: Column(
@@ -135,7 +171,7 @@ class _UserCard extends StatelessWidget {
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
               children: [
-                _RoleBadge(roleLabel: user.role.label),
+                _RoleBadge(roleLabel: user.roleLabel),
                 _SmallPill(label: user.lastSeenLabel),
               ],
             ),
@@ -282,57 +318,3 @@ class _SmallPill extends StatelessWidget {
     );
   }
 }
-
-class _UserData {
-  const _UserData({
-    required this.displayName,
-    required this.username,
-    required this.siteName,
-    required this.role,
-    required this.active,
-    required this.lastSeenLabel,
-  });
-
-  final String displayName;
-  final String username;
-  final String siteName;
-  final AppRole role;
-  final bool active;
-  final String lastSeenLabel;
-
-  String get initials {
-    final segments = displayName.trim().split(RegExp(r'\s+'));
-    if (segments.length == 1) {
-      return segments.first.substring(0, 1).toUpperCase();
-    }
-
-    return '${segments.first[0]}${segments.last[0]}'.toUpperCase();
-  }
-}
-
-const List<_UserData> _demoUsers = [
-  _UserData(
-    displayName: 'Nguyen Minh Anh',
-    username: 'minh.anh',
-    siteName: 'Kho HCM 01',
-    role: AppRole.administrator,
-    active: true,
-    lastSeenLabel: 'Vừa truy cập',
-  ),
-  _UserData(
-    displayName: 'Tran Van Khoa',
-    username: 'van.khoa',
-    siteName: 'Kho HCM 01',
-    role: AppRole.warehouseManager,
-    active: true,
-    lastSeenLabel: '2 giờ trước',
-  ),
-  _UserData(
-    displayName: 'Le Thu Trang',
-    username: 'thu.trang',
-    siteName: 'Kho Binh Duong',
-    role: AppRole.warehouseKeeper,
-    active: false,
-    lastSeenLabel: '3 ngày trước',
-  ),
-];
