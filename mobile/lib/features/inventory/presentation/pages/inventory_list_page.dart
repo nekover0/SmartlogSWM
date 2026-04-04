@@ -1,33 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/features/inventory/application/providers/inventory_providers.dart';
+import 'package:smartlog_swm_mobile/features/inventory/domain/models/inventory_models.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
-class InventoryListPage extends StatefulWidget {
+class InventoryListPage extends ConsumerStatefulWidget {
   const InventoryListPage({super.key});
 
   @override
-  State<InventoryListPage> createState() => _InventoryListPageState();
+  ConsumerState<InventoryListPage> createState() => _InventoryListPageState();
 }
 
-class _InventoryListPageState extends State<InventoryListPage> {
+class _InventoryListPageState extends ConsumerState<InventoryListPage> {
   _InventoryFilter _activeFilter = _InventoryFilter.all;
 
-  List<_InventoryItem> get _filteredItems {
+  List<_InventoryItem> _filteredItems(List<_InventoryItem> allItems) {
     return switch (_activeFilter) {
       _InventoryFilter.lowStock =>
-        _inventoryItems
+        allItems
             .where((item) => item.health == _InventoryHealth.low)
             .toList(growable: false),
-      _ => _inventoryItems,
+      _ => allItems,
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    final inventoryState = ref.watch(inventoryListProvider);
+    final allItems =
+        inventoryState.valueOrNull
+            ?.map((entity) => _InventoryItem.fromEntity(entity))
+            .toList(growable: false) ??
+        const <_InventoryItem>[];
+    final items = _filteredItems(allItems);
+
+    if (inventoryState.isLoading && inventoryState.valueOrNull == null) {
+      return const AppLoadingView(message: 'Đang tải tồn kho...');
+    }
+
+    if (inventoryState.hasError && inventoryState.valueOrNull == null) {
+      return AppErrorState(
+        title: 'Không tải được tồn kho',
+        message: '${inventoryState.error}',
+        onRetry: () {
+          ref.invalidate(inventoryListProvider);
+        },
+      );
+    }
+
     final theme = Theme.of(context);
-    final items = _filteredItems;
     final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
 
     return Stack(
@@ -75,7 +101,7 @@ class _InventoryListPageState extends State<InventoryListPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Tồn kho hiện tại (142)',
+                          'Tồn kho hiện tại (${allItems.length})',
                           key: const Key('inventory_list_header_total'),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -466,6 +492,28 @@ class _InventoryItem {
     required this.health,
   });
 
+  factory _InventoryItem.fromEntity(InventoryItemEntity entity) {
+    final locationParts = <String>[
+      if ((entity.zoneCode ?? '').trim().isNotEmpty) entity.zoneCode!.trim(),
+      if ((entity.shelfCode ?? '').trim().isNotEmpty)
+        entity.shelfCode!.trim()
+      else
+        entity.locationCode,
+    ];
+
+    return _InventoryItem(
+      id: entity.id,
+      skuCode: entity.skuCode,
+      name: entity.itemName,
+      location: locationParts.join(', '),
+      quantity: entity.availableQty.round(),
+      uom: entity.uomCode,
+      health: entity.isLowStock
+          ? _InventoryHealth.low
+          : _InventoryHealth.stable,
+    );
+  }
+
   final String id;
   final String skuCode;
   final String name;
@@ -515,42 +563,3 @@ class _StatusTone {
   final Color background;
   final Color foreground;
 }
-
-const List<_InventoryItem> _inventoryItems = <_InventoryItem>[
-  _InventoryItem(
-    id: 'inv-smt-9022-x',
-    skuCode: 'SMT-9022-X',
-    name: 'Cảm biến nhiệt Thermal GX-90',
-    location: 'Aisle 4, Bin B-12',
-    quantity: 12,
-    uom: 'PCS',
-    health: _InventoryHealth.low,
-  ),
-  _InventoryItem(
-    id: 'inv-net-4402-b',
-    skuCode: 'NET-4402-B',
-    name: 'Industrial Hub Switch 24-Port',
-    location: 'Zone C, Shelf 09',
-    quantity: 450,
-    uom: 'PCS',
-    health: _InventoryHealth.stable,
-  ),
-  _InventoryItem(
-    id: 'inv-cbl-50-fbr',
-    skuCode: 'CBL-50-FBR',
-    name: 'Cáp Quang Fiber Optic (50m)',
-    location: 'Bulk Storage, Row 2',
-    quantity: 5,
-    uom: 'ROLL',
-    health: _InventoryHealth.low,
-  ),
-  _InventoryItem(
-    id: 'inv-pwr-mod-88',
-    skuCode: 'PWR-MOD-88',
-    name: 'Lithium Power Module 12V',
-    location: 'Aisle 2, Bin A-04',
-    quantity: 84,
-    uom: 'UNIT',
-    health: _InventoryHealth.stable,
-  ),
-];

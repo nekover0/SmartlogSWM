@@ -1,27 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:smartlog_swm_mobile/app/router/app_route_paths.dart';
+import 'package:smartlog_swm_mobile/features/inventory/application/providers/inventory_providers.dart';
+import 'package:smartlog_swm_mobile/features/inventory/domain/models/inventory_models.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 import 'package:smartlog_swm_mobile/shared/widgets/app_error_state.dart';
+import 'package:smartlog_swm_mobile/shared/widgets/app_loading_view.dart';
 
-class InventoryDetailPage extends StatefulWidget {
+class InventoryDetailPage extends ConsumerStatefulWidget {
   const InventoryDetailPage({super.key, required this.inventoryId});
 
   final String inventoryId;
 
   @override
-  State<InventoryDetailPage> createState() => _InventoryDetailPageState();
+  ConsumerState<InventoryDetailPage> createState() =>
+      _InventoryDetailPageState();
 }
 
-class _InventoryDetailPageState extends State<InventoryDetailPage> {
+class _InventoryDetailPageState extends ConsumerState<InventoryDetailPage> {
   _TimelineRange _timelineRange = _TimelineRange.all;
 
   @override
   Widget build(BuildContext context) {
-    final detail = _inventoryDetails[widget.inventoryId];
+    final detailState = ref.watch(inventoryDetailProvider(widget.inventoryId));
+    final detailEntity = detailState.valueOrNull;
 
-    if (detail == null) {
+    if (detailState.isLoading && detailEntity == null) {
+      return Scaffold(
+        appBar: _InventoryDetailAppBar(onBack: () => _handleBack(context)),
+        body: const AppLoadingView(message: 'Đang tải chi tiết tồn kho...'),
+      );
+    }
+
+    if (detailState.hasError && detailEntity == null) {
+      final error = detailState.error;
+      if (_isMissingInventory(error)) {
+        return Scaffold(
+          appBar: _InventoryDetailAppBar(onBack: () => _handleBack(context)),
+          body: AppErrorState(
+            title: 'Không tìm thấy hàng hóa',
+            message:
+                'Mã hàng ${widget.inventoryId} không tồn tại hoặc đã bị xóa.',
+            onRetry: () => context.go(AppRoutePaths.inventory),
+          ),
+        );
+      }
+
+      return Scaffold(
+        appBar: _InventoryDetailAppBar(onBack: () => _handleBack(context)),
+        body: AppErrorState(
+          title: 'Không tải được chi tiết tồn kho',
+          message: '$error',
+          onRetry: () {
+            ref.invalidate(inventoryDetailProvider(widget.inventoryId));
+          },
+        ),
+      );
+    }
+
+    if (detailEntity == null) {
       return Scaffold(
         appBar: _InventoryDetailAppBar(onBack: () => _handleBack(context)),
         body: AppErrorState(
@@ -32,6 +72,8 @@ class _InventoryDetailPageState extends State<InventoryDetailPage> {
         ),
       );
     }
+
+    final detail = _InventoryDetailData.fromEntity(detailEntity);
 
     final visibleTimelineEvents = detail.timelineEvents
         .where((event) => _timelineRange.accepts(event.occurredAt))
@@ -89,6 +131,13 @@ class _InventoryDetailPageState extends State<InventoryDetailPage> {
       return;
     }
     context.go(AppRoutePaths.inventory);
+  }
+
+  bool _isMissingInventory(Object? error) {
+    final message = '$error'.toLowerCase();
+    return message.contains('not found') ||
+        message.contains('statuscode: 404') ||
+        message.contains('bad state: no element');
   }
 }
 
@@ -1200,6 +1249,49 @@ class _InventoryTimelineEvent {
   final String timestamp;
   final DateTime occurredAt;
   final String delta;
+
+  factory _InventoryTimelineEvent.fromEntity(
+    InventoryTimelineEventEntity entity,
+  ) {
+    return _InventoryTimelineEvent(
+      icon: _resolveIcon(entity.type),
+      label: entity.label,
+      timestamp: DateFormat(
+        'dd/MM/yyyy HH:mm',
+      ).format(entity.occurredAt.toLocal()),
+      occurredAt: entity.occurredAt,
+      delta: _formatDelta(entity.deltaQty),
+    );
+  }
+
+  static IconData _resolveIcon(String transactionType) {
+    final normalized = transactionType.trim().toLowerCase();
+    if (normalized.contains('receipt') || normalized.contains('receive')) {
+      return Icons.login_rounded;
+    }
+    if (normalized.contains('issue') || normalized.contains('shipment')) {
+      return Icons.logout_rounded;
+    }
+    if (normalized.contains('adjust') || normalized.contains('count')) {
+      return Icons.fact_check_outlined;
+    }
+
+    return Icons.swap_horiz_rounded;
+  }
+
+  static String _formatDelta(double value) {
+    if (value == 0) {
+      return '0';
+    }
+
+    if (value % 1 == 0) {
+      final rounded = value.toInt();
+      return rounded > 0 ? '+$rounded' : '$rounded';
+    }
+
+    final fixed = value.toStringAsFixed(2);
+    return value > 0 ? '+$fixed' : fixed;
+  }
 }
 
 class _InventoryDetailData {
@@ -1234,62 +1326,36 @@ class _InventoryDetailData {
   final String batch;
   final String zone;
   final List<_InventoryTimelineEvent> timelineEvents;
-}
 
-final Map<String, _InventoryDetailData> _inventoryDetails =
-    <String, _InventoryDetailData>{
-      'inv-smt-9022-x': _InventoryDetailData(
-        id: 'inv-smt-9022-x',
-        sku: 'SMT-9022-X',
-        name: 'Cảm biến nhiệt Thermal GX-90',
-        status: _InventoryHealthStatus.low,
-        uom: 'PCS',
-        currentQty: 12,
-        availableQty: 9,
-        warningThreshold: 15,
-        priority: 'Cao',
-        warehouse: 'Sai Gon Distribution Center',
-        shelf: 'Aisle 4 / Bin B-12',
-        batch: 'LOT-24-03-21',
-        zone: 'Khu cảm biến',
-        timelineEvents: <_InventoryTimelineEvent>[
-          _InventoryTimelineEvent(
-            icon: Icons.fact_check_outlined,
-            label: 'Kiểm kê gần nhất',
-            timestamp: '25/03/2026 09:20',
-            occurredAt: DateTime(2026, 3, 25, 9, 20),
-            delta: '0',
-          ),
-          _InventoryTimelineEvent(
-            icon: Icons.logout_rounded,
-            label: 'Xuất kho gần nhất',
-            timestamp: '25/03/2026 08:40',
-            occurredAt: DateTime(2026, 3, 25, 8, 40),
-            delta: '-8',
-          ),
-          _InventoryTimelineEvent(
-            icon: Icons.login_rounded,
-            label: 'Nhập kho gần nhất',
-            timestamp: '24/03/2026 10:15',
-            occurredAt: DateTime(2026, 3, 24, 10, 15),
-            delta: '+20',
-          ),
-        ],
-      ),
-      'inv-net-4402-b': _InventoryDetailData(
-        id: 'inv-net-4402-b',
-        sku: 'NET-4402-B',
-        name: 'Industrial Hub Switch 24-Port',
-        status: _InventoryHealthStatus.stable,
-        uom: 'PCS',
-        currentQty: 450,
-        availableQty: 432,
-        warningThreshold: 50,
-        priority: 'Bình thường',
-        warehouse: 'Sai Gon Distribution Center',
-        shelf: 'Zone C / Shelf 09',
-        batch: 'LOT-24-02-11',
-        zone: 'Khu thiết bị mạng',
-        timelineEvents: <_InventoryTimelineEvent>[],
-      ),
-    };
+  factory _InventoryDetailData.fromEntity(InventoryDetailEntity entity) {
+    final item = entity.item;
+    final status = item.isLowStock
+        ? _InventoryHealthStatus.low
+        : _InventoryHealthStatus.stable;
+
+    return _InventoryDetailData(
+      id: item.id,
+      sku: item.skuCode,
+      name: item.itemName,
+      status: status,
+      uom: item.uomCode,
+      currentQty: item.physicalQty.round(),
+      availableQty: item.availableQty.round(),
+      warningThreshold: item.warningThreshold.round(),
+      priority: entity.priority,
+      warehouse: item.warehouseName.trim().isEmpty
+          ? item.warehouseCode
+          : item.warehouseName,
+      shelf: (item.shelfCode ?? '').trim().isEmpty
+          ? item.locationCode
+          : item.shelfCode!.trim(),
+      batch: (item.batchNo ?? '').trim().isEmpty ? 'N/A' : item.batchNo!.trim(),
+      zone: (item.zoneCode ?? '').trim().isEmpty
+          ? item.locationCode
+          : item.zoneCode!.trim(),
+      timelineEvents: entity.timelineEvents
+          .map((entry) => _InventoryTimelineEvent.fromEntity(entry))
+          .toList(growable: false),
+    );
+  }
+}
