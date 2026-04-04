@@ -106,7 +106,7 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
                     state: scanState,
                     lookupController: _lookupController,
                     onLookup: _handleLookup,
-                    onLookupNotFound: _lookupFixtureNotFound,
+                    onLookupNotFound: _lookupNotFoundScenario,
                     onRequestPermission: () {
                       _clearCameraRuntimeError();
                       ref
@@ -253,7 +253,7 @@ class _BarcodeScanPageState extends ConsumerState<BarcodeScanPage> {
     }
   }
 
-  Future<void> _lookupFixtureNotFound() async {
+  Future<void> _lookupNotFoundScenario() async {
     _lookupController.text = 'NOT-FOUND';
     await _handleLookup();
   }

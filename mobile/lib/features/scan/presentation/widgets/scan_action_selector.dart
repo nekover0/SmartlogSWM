@@ -42,28 +42,30 @@ class ScanActionSelector extends StatelessWidget {
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
-              children: ScanMode.values.map((mode) {
-                final isSupported = supportedModes.contains(mode);
-                final isSelected = mode == selectedMode;
+              children: ScanMode.values
+                  .map((mode) {
+                    final isSupported = supportedModes.contains(mode);
+                    final isSelected = mode == selectedMode;
 
-                return ChoiceChip(
-                  key: Key('scan_action_selector_${mode.name}'),
-                  selected: isSelected,
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_modeLabel(mode)),
-                      if (!isSupported) ...[
-                        const SizedBox(width: AppSpacing.xs),
-                        const Icon(Icons.lock_outline_rounded, size: 16),
-                      ],
-                    ],
-                  ),
-                  onSelected: isSupported && onSelected != null
-                      ? (_) => onSelected!(mode)
-                      : null,
-                );
-              }).toList(growable: false),
+                    return ChoiceChip(
+                      key: Key('scan_action_selector_${mode.name}'),
+                      selected: isSelected,
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_modeLabel(mode)),
+                          if (!isSupported) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            const Icon(Icons.lock_outline_rounded, size: 16),
+                          ],
+                        ],
+                      ),
+                      onSelected: isSupported && onSelected != null
+                          ? (_) => onSelected!(mode)
+                          : null,
+                    );
+                  })
+                  .toList(growable: false),
             ),
             const SizedBox(height: AppSpacing.md),
             Container(
@@ -103,7 +105,7 @@ String _modeLabel(ScanMode mode) {
 String _modeDescription(ScanMode mode) {
   return switch (mode) {
     ScanMode.receive =>
-      'Quet barcode, doi chieu fixture receive va mo form xac nhan nhap kho.',
+      'Quet barcode, doi chieu API receive va mo form xac nhan nhap kho.',
     ScanMode.issue => 'Flow xuat kho chua duoc mo trong phien ban hien tai.',
     ScanMode.count => 'Flow kiem ke se duoc bat trong task tiep theo.',
     ScanMode.move => 'Flow chuyen vi tri se duoc bat trong task tiep theo.',

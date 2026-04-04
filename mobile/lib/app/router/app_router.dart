@@ -16,6 +16,7 @@ import 'package:smartlog_swm_mobile/features/account/presentation/pages/role_adm
 import 'package:smartlog_swm_mobile/features/account/presentation/pages/user_admin_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/login_page.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/pages/post_login_bootstrap_page.dart';
+import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_create_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_detail_page.dart';
 import 'package:smartlog_swm_mobile/features/inbound/presentation/pages/receipt_list_page.dart';
 import 'package:smartlog_swm_mobile/features/inventory/presentation/pages/inventory_detail_page.dart';
@@ -141,14 +142,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.receiptCreate,
         name: AppRouteNames.receiptCreate,
         builder: (BuildContext context, GoRouterState state) {
-          return const AppRoutePlaceholderPage(
-            icon: Icons.add_box_outlined,
-            frameLabel: '09. Chi tiết Phiếu Nhập (Refined Flow)',
-            routePath: AppRoutePaths.receiptCreate,
-            title: 'Tạo phiếu nhập',
-            description:
-                'Màn tạo phiếu nhập đang là placeholder cho flow chi tiết inbound.',
-          );
+          return const ReceiptCreatePage();
         },
       ),
       GoRoute(

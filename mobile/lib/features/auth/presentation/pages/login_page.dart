@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartlog_swm_mobile/features/auth/application/controllers/auth_controller.dart';
-import 'package:smartlog_swm_mobile/features/auth/domain/entities/auth_sample_account.dart';
 import 'package:smartlog_swm_mobile/features/auth/presentation/widgets/login_form.dart';
-import 'package:smartlog_swm_mobile/features/auth/presentation/widgets/sample_account_accordion.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_colors.dart';
 import 'package:smartlog_swm_mobile/shared/theme/app_spacing.dart';
 
@@ -15,8 +13,6 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  AuthSampleAccount? _selectedSampleAccount;
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -63,7 +59,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           LoginForm(
                             isSubmitting: isSubmitting,
                             errorMessage: errorMessage,
-                            selectedSampleAccount: _selectedSampleAccount,
                             onForgotPassword: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -78,14 +73,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 username: username,
                                 password: password,
                               );
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          SampleAccountAccordion(
-                            onSelectAccount: (AuthSampleAccount account) {
-                              setState(() {
-                                _selectedSampleAccount = account;
-                              });
                             },
                           ),
                           const SizedBox(height: AppSpacing.xl),
@@ -171,7 +158,7 @@ class _LoginHero extends StatelessWidget {
                   child: Text(
                     isSubmitting
                         ? 'Đang xác thực thông tin đăng nhập...'
-                        : 'Đăng nhập nhanh bằng tài khoản fixture để kiểm thử luồng đầu tiên.',
+                        : 'Sử dụng tài khoản hệ thống để tiếp tục vào ứng dụng.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.white.withValues(alpha: 0.88),
                     ),

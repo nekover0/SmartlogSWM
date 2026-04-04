@@ -16,13 +16,14 @@ void main() {
     PermissionService? permissionService,
     ScanRepository? scanRepository,
   }) {
+    final resolvedScanRepository = scanRepository ?? _CountingScanRepository();
+
     return ProviderContainer(
       overrides: [
         permissionServiceProvider.overrideWithValue(
           permissionService ?? const FakePermissionService(),
         ),
-        if (scanRepository != null)
-          scanRepositoryProvider.overrideWithValue(scanRepository),
+        scanRepositoryProvider.overrideWithValue(resolvedScanRepository),
       ],
     );
   }
