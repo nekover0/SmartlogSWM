@@ -34,7 +34,7 @@ void main() {
           warningThreshold: 10,
         ),
         priority: 'Binh thuong',
-        timelineEvents: const <InventoryTimelineEventEntity>[
+        timelineEvents: <InventoryTimelineEventEntity>[
           InventoryTimelineEventEntity(
             type: 'issue',
             label: 'Xuat kho gan nhat',
