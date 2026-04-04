@@ -144,7 +144,7 @@ class _ManualScanPageState extends ConsumerState<ManualScanPage> {
                                 key: const Key('manual_scan_not_found_button'),
                                 onPressed: isLookingUp || isSubmitting
                                     ? null
-                                    : _lookupFixtureNotFound,
+                                    : _lookupNotFoundScenario,
                                 child: const Text('Giả lập không tìm thấy'),
                               ),
                             ],
@@ -343,7 +343,7 @@ class _ManualScanPageState extends ConsumerState<ManualScanPage> {
     }
   }
 
-  Future<void> _lookupFixtureNotFound() async {
+  Future<void> _lookupNotFoundScenario() async {
     _lookupController.text = 'NOT-FOUND';
     await _handleLookup();
   }

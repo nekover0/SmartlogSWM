@@ -18,25 +18,20 @@ void main() {
       httpClient.listResponse = <dynamic>[
         <String, dynamic>{
           'id': 'rcp-001',
-          'receipt_no': 'RCP-240325-001',
-          'status': 'weighing_1',
-          'owner': <String, dynamic>{
-            'id': 'owner-1',
-            'code': 'OWN-1',
-            'name': 'Owner 1',
-          },
-          'warehouse': <String, dynamic>{
-            'id': 'wh-1',
-            'code': 'WH1',
-            'name': 'Warehouse 1',
-          },
-          'vehicle': <String, dynamic>{'plate_number': '51A-12345'},
-          'expected_weight_kg': 1000.5,
+          'receiptNumber': 'RCP-240325-001',
+          'status': 'WEIGHING_2',
+          'ownerId': 'owner-1',
+          'ownerCode': 'OWN-1',
+          'ownerName': 'Owner 1',
+          'warehouseId': 'wh-1',
+          'warehouseCode': 'WH1',
+          'warehouseName': 'Warehouse 1',
+          'vehicleNumber': '51A-12345',
+          'expectedQty': 1000.5,
           'received_weight_kg': 980.0,
-          'variance_weight_kg': -20.5,
-          'sync_state': 'synced',
-          'created_at': '2026-04-04T00:00:00.000Z',
-          'updated_at': '2026-04-04T00:10:00.000Z',
+          'syncState': 'pending',
+          'createdAt': '2026-04-04T00:00:00.000Z',
+          'updatedAt': '2026-04-04T00:10:00.000Z',
         },
       ];
 
@@ -50,35 +45,50 @@ void main() {
       expect(receipts, hasLength(1));
       expect(receipts.single.id, 'rcp-001');
       expect(receipts.single.receiptNo, 'RCP-240325-001');
-      expect(receipts.single.status, ReceiptStatus.weighing1);
+      expect(receipts.single.status, ReceiptStatus.weighing2);
       expect(receipts.single.owner.code, 'OWN-1');
+      expect(receipts.single.vehicle.plateNumber, '51A-12345');
+      expect(receipts.single.expectedWeightKg, 1000.5);
+      expect(receipts.single.syncState, SyncState.pending);
     });
 
     test(
       'getReceiptDetail calls endpoint and unwraps receipt payload',
       () async {
         httpClient.mapResponse = <String, dynamic>{
-          'receipt': <String, dynamic>{
-            'id': 'rcp-002',
-            'receipt_no': 'RCP-240325-002',
-            'status': 'confirmed',
-            'owner': <String, dynamic>{
-              'id': 'owner-2',
-              'code': 'OWN-2',
-              'name': 'Owner 2',
+          'data': <String, dynamic>{
+            'data': <String, dynamic>{
+              'id': 'rcp-002',
+              'receiptNumber': 'RCP-240325-002',
+              'status': 'confirmed',
+              'owner': <String, dynamic>{
+                'id': 'owner-2',
+                'code': 'OWN-2',
+                'name': 'Owner 2',
+              },
+              'warehouse': <String, dynamic>{
+                'id': 'wh-2',
+                'code': 'WH2',
+                'name': 'Warehouse 2',
+              },
+              'vehicle': <String, dynamic>{'plate_number': '51A-22222'},
+              'expectedWeightKg': 1200.0,
+              'receivedWeightKg': 1200.0,
+              'varianceWeightKg': 0.0,
+              'syncState': 'synced',
+              'createdAt': '2026-04-04T01:00:00.000Z',
+              'updatedAt': '2026-04-04T01:05:00.000Z',
+              'lines': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'id': 'line-1',
+                  'itemCode': 'SKU-001',
+                  'itemName': 'Milk Powder',
+                  'uomCode': 'BAG',
+                  'expectedQty': 100,
+                  'receivedQty': 98,
+                },
+              ],
             },
-            'warehouse': <String, dynamic>{
-              'id': 'wh-2',
-              'code': 'WH2',
-              'name': 'Warehouse 2',
-            },
-            'vehicle': <String, dynamic>{'plate_number': '51A-22222'},
-            'expected_weight_kg': 1200.0,
-            'received_weight_kg': 1200.0,
-            'variance_weight_kg': 0.0,
-            'sync_state': 'synced',
-            'created_at': '2026-04-04T01:00:00.000Z',
-            'updated_at': '2026-04-04T01:05:00.000Z',
           },
         };
 
@@ -97,6 +107,9 @@ void main() {
         expect(receipt.status, ReceiptStatus.confirmed);
         expect(receipt.owner.code, 'OWN-2');
         expect(receipt.warehouse.code, 'WH2');
+        expect(receipt.vehicle.plateNumber, '51A-22222');
+        expect(receipt.lines, hasLength(1));
+        expect(receipt.lines.single.itemCode, 'SKU-001');
       },
     );
   });

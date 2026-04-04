@@ -133,12 +133,9 @@ class DioAppHttpClient implements AppHttpClient {
       );
 
       final data = _extractPayloadData(response.data);
-      if (data is List<dynamic>) {
-        return data;
-      }
-
-      if (data is List) {
-        return List<dynamic>.from(data);
+      final listData = _extractListPayload(data);
+      if (listData != null) {
+        return listData;
       }
 
       throw NetworkUnexpectedException(
@@ -234,6 +231,40 @@ class DioAppHttpClient implements AppHttpClient {
     }
 
     return map['data'];
+  }
+
+  List<dynamic>? _extractListPayload(Object? value, {int depth = 0}) {
+    if (depth > 4) {
+      return null;
+    }
+
+    if (value is List<dynamic>) {
+      return value;
+    }
+
+    if (value is List) {
+      return List<dynamic>.from(value);
+    }
+
+    if (value is! Map) {
+      return null;
+    }
+
+    final map = value is Map<String, dynamic>
+        ? value
+        : value.map(
+            (Object? key, Object? nestedValue) =>
+                MapEntry(key?.toString() ?? '', nestedValue),
+          );
+
+    for (final key in const <String>['data', 'items', 'rows', 'results']) {
+      final nestedList = _extractListPayload(map[key], depth: depth + 1);
+      if (nestedList != null) {
+        return nestedList;
+      }
+    }
+
+    return null;
   }
 
   Options _resolveOptions(Options? options, {required bool requiresAuth}) {

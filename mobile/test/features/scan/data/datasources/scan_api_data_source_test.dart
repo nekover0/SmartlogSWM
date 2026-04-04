@@ -20,13 +20,15 @@ void main() {
       'lookupReceive posts expected payload and maps lookup response',
       () async {
         httpClient.mapResponse = <String, dynamic>{
-          'session_id': 'scan-001',
-          'state': 'lookup_success',
-          'resolved_item_code': 'ITEM-001',
-          'resolved_location_code': 'A-01-01',
-          'reference_id': 'rcv-001',
-          'warehouse_id': 'wh-01',
-          'message': 'Matched',
+          'data': <String, dynamic>{
+            'sessionId': 'scan-001',
+            'state': 'LOOKUP_SUCCESS',
+            'resolvedItemCode': 'ITEM-001',
+            'resolvedLocationCode': 'A-01-01',
+            'referenceId': 'rcv-001',
+            'warehouseId': 'wh-01',
+            'message': 'Matched',
+          },
         };
 
         final draft = await dataSource.lookupReceive(
@@ -64,8 +66,7 @@ void main() {
       'submitReceive posts expected payload and keeps request defaults',
       () async {
         httpClient.mapResponse = <String, dynamic>{
-          'success': true,
-          'message': 'Submitted',
+          'data': <String, dynamic>{'success': true, 'message': 'Submitted'},
         };
 
         const request = ScanSubmitRequestDto(
